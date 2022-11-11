@@ -1,0 +1,29 @@
+﻿#* => comentaro de uma linha
+#$ => cabeçalho
+#! => bandeira/macação
+$? => bandeira/marcação de texto
+
+#* versão(version) é obrigatorio
+#$ version=1.0
+#$ type=.alfbt
+#$ encoding=utf-8
+
+/*
+{Tipo de marcação} {nome}={valor}
+tipo e nome tem que estar separado por um espaço em branco
+nome e valor não podem ter espaços em braco, use "_" para preencher osespaços em braco
+*/ 
+#! Tag1=Valor1
+
+/*
+{Tipo de marcação} {nome}=@(\n{valor}\n)@
+tipo e nome tem que estar separado por um espaço em branco
+nome não podem ter espaços em braco, use "_" para preencher osespaços em braco
+para usar "@(, )@" => "@/(, )/@"
+*/
+#? TagTexto1=@(
+O gato.
+O sapo.
+O tigre.
+O Tubarão.
+)@

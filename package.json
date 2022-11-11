@@ -1,0 +1,22 @@
+{
+  "name": "com.cobilas.core",
+  "version": "1.0.0",
+  "displayName": "Cobilas Core 2",
+  "description": "Pacote de blibiotecas para unity3d",
+  "documentationUrl": "https://github.com/BelicusBr/com.cobilas.core.wiki.git",
+  "licensesUrl": "https://github.com/BelicusBr/com.cobilas.core/blob/main/LICENSE.md",
+  "changelogUrl": "https://github.com/BelicusBr/com.cobilas.core/blob/main/CHANGELOG.md",
+  "unity": "2018.1",
+  "unityRelease": "0b5",
+  "type": "cb-library",
+  "author": {
+    "name": "Cobilas CTB"
+  },
+  "repository": {
+    "url": "https://github.com/BelicusBr/com.cobilas.core.git",
+    "type": "git"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com/@belicusbr"
+  }
+}

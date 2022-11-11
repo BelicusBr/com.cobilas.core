@@ -1,0 +1,17 @@
+﻿#$ Type=.alfbt
+#$ Version=1.7.2
+#$ Encoding=utf-8
+#$ LineBreakType=LF
+
+#! GUITipo=Menu
+#! Idioma=PT-BR
+#* bandeira com multiplos valores
+#* &Ref => server para apontar para uma marcacao
+#! Marca1=Item1, Item2
+#! Marca2=Item1, Item2, &Ref Valro1
+
+#* caracteres especiais com separadores (\{ \} \# \* \! \$ \\ \/)
+#? Valor1=/*Item1*/
+#? Valor2=/*Item2
+so Item2 aqui
+*/
