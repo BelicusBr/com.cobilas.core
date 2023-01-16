@@ -23,6 +23,12 @@ namespace Cobilas.IO.Alf.Alfbt.Extension {
             return res;
         }
 
+        public static string TabPadRight(this string stg, int tabs)
+            => string.Format("{0}{1}", stg, string.Empty.PadRight(tabs, '\t'));
+
+        public static string TabPadLeft(this string stg, int tabs)
+            => string.Format("{0}{1}", string.Empty.PadLeft(tabs, '\t'), stg);
+
         public static bool AlfbtValidName(this string str, out char errorChar) {
             char OutErrorChar = '\0';
             bool res = str.All((c) => {

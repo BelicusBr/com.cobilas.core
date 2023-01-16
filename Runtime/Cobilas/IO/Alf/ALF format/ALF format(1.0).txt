@@ -1,0 +1,12 @@
+﻿[header:>
+	[version:1.0]
+	[encoding:utf-8]
+<]
+
+[? Comentários ?]
+
+[Tag1:
+	 :texto1
+	 :>
+	[Tag1-1:text1]
+<]

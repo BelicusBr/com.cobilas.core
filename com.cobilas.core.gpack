@@ -1,9 +1,10 @@
 {
     "name": "com.cobilas.core",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "repository": "https://github.com/BelicusBr/com.cobilas.core.git",
     "relatedPackages": [
-        "1.0.0"
+        "1.0.0",
+		"1.0.1"
     ],
     "gitDependencies": []
 }

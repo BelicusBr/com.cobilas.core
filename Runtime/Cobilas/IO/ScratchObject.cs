@@ -35,7 +35,7 @@ namespace Cobilas.IO {
 
         /// <summary>Carrega um objeto <see cref="ScratchObject"/> de um arquivo.</summary>
         /// <param name="filePath">Caminho do arquivo.</param>
-        public static ScratchObject loadScratchObject(string filePath) {
+        public static ScratchObject LoadScratchObject(string filePath) {
             BinaryFormatter formatter = new BinaryFormatter();
             using (FileStream stream = File.OpenRead(filePath))
                 return (ScratchObject)formatter.Deserialize(stream);

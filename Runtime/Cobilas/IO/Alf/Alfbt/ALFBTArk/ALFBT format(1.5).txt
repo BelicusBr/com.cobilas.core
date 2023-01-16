@@ -1,0 +1,17 @@
+#> ALFBT format(1.5)
+
+#> Comentário
+#! version:/*1.5*/
+#! type:/*.alfbt*/
+#! encoding:/*utf-8*/
+
+#> Marcação uni-linha
+#! Tag1:/*value1*/
+
+#> Marcação mult-linha
+#! Tag2:/*
+value1
+value2
+value3
+value4
+*/

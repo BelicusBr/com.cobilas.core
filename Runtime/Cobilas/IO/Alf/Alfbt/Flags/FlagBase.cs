@@ -7,14 +7,11 @@ namespace Cobilas.IO.Alf.Alfbt.Flags {
         private string name;
         private string value;
         private AlfbtFlags flags;
-#pragma warning disable CS1591
         public string Name => name;
         public string Value => value;
-#pragma warning restore CS1591
         /// <summary>O tipo da bandeira.</summary>
         public AlfbtFlags Flags => flags;
 
-#pragma warning disable CS1591
         public FlagBase(string name, string value, AlfbtFlags flags) {
             this.name = name;
             this.value = value;
@@ -27,6 +24,5 @@ namespace Cobilas.IO.Alf.Alfbt.Flags {
                 value is null ? string.Empty : (string)value.Clone(),
                 flags
                 );
-#pragma warning restore CS1591
     }
 }

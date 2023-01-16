@@ -6,10 +6,8 @@ namespace Cobilas.IO.Alf.Alfbt.Flags {
         private string name;
         private string value;
 
-#pragma warning disable CS1591
         public string Name => name;
         public string Value => value;
-#pragma warning restore CS1591
 
         internal MarkingFlag(string name, string value) {
             this.name = name;
@@ -19,7 +17,6 @@ namespace Cobilas.IO.Alf.Alfbt.Flags {
         internal MarkingFlag(FlagBase flag) :
             this(flag.Name, flag.Value) { }
 
-#pragma warning disable CS1591
         public override string ToString() {
             return $"Name:{name}\n" +
                 $"Value:{value}\n";
@@ -30,6 +27,5 @@ namespace Cobilas.IO.Alf.Alfbt.Flags {
                 name is null ? string.Empty : (string)name.Clone(),
                 value is null ? string.Empty : (string)value.Clone()
                 );
-#pragma warning restore CS1591
     }
 }

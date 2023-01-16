@@ -8,10 +8,8 @@ namespace Cobilas.IO.Alf.Alfbt.Flags {
         private string name;
         private string value;
 
-#pragma warning disable CS1591
         public string Name => name;
         public string Value => value;
-#pragma warning restore CS1591
 
         internal TextFlag(string name, string value) {
             this.name = name;
@@ -50,7 +48,6 @@ namespace Cobilas.IO.Alf.Alfbt.Flags {
 
         private string I_Format(params object[] args)
             => I_Format(CultureInfo.CurrentCulture, args);
-#pragma warning disable CS1591
         public override string ToString() {
             StringBuilder builder = new StringBuilder();
             builder.AppendLine($"Name:{name} {{");
@@ -64,6 +61,5 @@ namespace Cobilas.IO.Alf.Alfbt.Flags {
                 name is null ? string.Empty : (string)name.Clone(),
                 value is null ? string.Empty : (string)value.Clone()
                 );
-#pragma warning restore CS1591
     }
 }

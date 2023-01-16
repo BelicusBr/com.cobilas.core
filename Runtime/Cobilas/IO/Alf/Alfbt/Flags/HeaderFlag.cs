@@ -24,7 +24,6 @@ namespace Cobilas.IO.Alf.Alfbt.Flags {
         private string GetValue(byte index)
             => flags[index] == null ? "vl_null" : flags[index].Value;
 
-#pragma warning disable CS1591
         public override string ToString() {
             StringBuilder builder = new StringBuilder();
             if (flags[0] != null)
@@ -41,6 +40,5 @@ namespace Cobilas.IO.Alf.Alfbt.Flags {
             res.flags = flags is null ? (FlagBase[])null : (FlagBase[])flags.Clone();
             return res;
         }
-#pragma warning restore CS1591
     }
 }

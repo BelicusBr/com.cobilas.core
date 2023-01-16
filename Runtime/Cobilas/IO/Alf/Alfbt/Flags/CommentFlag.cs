@@ -7,10 +7,8 @@ namespace Cobilas.IO.Alf.Alfbt.Flags {
     public struct CommentFlag : ICloneable {
         private FlagBase[] flags;
 
-#pragma warning disable CS1591
         public int FlagCount => ArrayManipulation.ArrayLength(flags);
         public long l_FlagCount => ArrayManipulation.EmpytArray(flags) ? 0 : flags.LongLength;
-#pragma warning restore CS1591
 
         internal void Add(FlagBase flag)
             => ArrayManipulation.Add(flag, ref flags);
@@ -23,7 +21,6 @@ namespace Cobilas.IO.Alf.Alfbt.Flags {
         public string GetComment(long index)
             => flags[index].Value;
 
-#pragma warning disable CS1591
         public override string ToString() {
             StringBuilder builder = new StringBuilder();
             for (int I = 0; I < FlagCount; I++)
@@ -36,6 +33,5 @@ namespace Cobilas.IO.Alf.Alfbt.Flags {
             res.flags = flags is null ? (FlagBase[])null : (FlagBase[])flags.Clone();
             return res;
         }
-#pragma warning restore CS1591
     }
 }
