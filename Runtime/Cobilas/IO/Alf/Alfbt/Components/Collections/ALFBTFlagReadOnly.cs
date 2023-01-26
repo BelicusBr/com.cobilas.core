@@ -1,25 +1,30 @@
 ﻿using System;
 using System.Collections;
 using Cobilas.Collections;
+using Cobilas.IO.Alf.Components;
 using System.Collections.Generic;
 using Cobilas.IO.Alf.Alfbt.Flags;
 using Cobilas.IO.Alf.Components.Collections;
 
 namespace Cobilas.IO.Alf.Alfbt.Components.Collections {
-    public sealed class ALFBTFlagReadOnly : FlagBase, IReadOnlyArray<ALFBTFlagReadOnly>, IConvertible {
+    public sealed class ALFBTFlagReadOnly : FlagBase, IItemReadOnly {
         private ALFItemReadOnly readOnly;
 
         public int Count => readOnly.Count;
-
-        public ALFBTFlagReadOnly this[int index] => new ALFBTFlagReadOnly(readOnly[index]);
-        object IReadOnlyArray.this[int index] => new ALFBTFlagReadOnly(readOnly[index]);
+        public string Text => ((IItemReadOnly)readOnly).Text;
+        public bool IsRoot => ((IItemReadOnly)readOnly).IsRoot;
+        public IItemReadOnly Parent => ((IItemReadOnly)readOnly).Parent;
+        object IReadOnlyArray.this[int index] => new ALFBTFlagReadOnly(readOnly[index] as ALFItemReadOnly);
+        IItemReadOnly IReadOnlyArray<IItemReadOnly>.this[int index] => new ALFBTFlagReadOnly(readOnly[index] as ALFItemReadOnly);
 
         public ALFBTFlagReadOnly(ALFItemReadOnly readOnly):base(readOnly.Name, readOnly.ToString(), AlfbtFlags.MarkingFlag)
         {
             this.readOnly = readOnly;
         }
 
-        public IEnumerator<ALFBTFlagReadOnly> GetEnumerator()
+        public ALFBTFlagReadOnly(ALFItem readOnly) : this(new ALFItemReadOnly(readOnly)) { }
+
+        public IEnumerator<IItemReadOnly> GetEnumerator()
             => new ALFBTFlagReadOnlyEnumerator(this);
 
         public TypeCode GetTypeCode()

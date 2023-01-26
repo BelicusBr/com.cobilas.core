@@ -2,21 +2,21 @@
 using System.Collections.Generic;
 
 namespace Cobilas.IO.Alf.Components.Collections {
-    public sealed class ALFItemReadOnlyEnumerator : IEnumerator<ALFItemReadOnly> {
-        private ALFItemReadOnly item;
+    public sealed class ItemReadOnlyEnumerator : IEnumerator<IItemReadOnly> {
+        private IItemReadOnly item;
         private int index;
         private object myObject;
 
-        public ALFItemReadOnly Current => (ALFItemReadOnly)myObject;
+        public IItemReadOnly Current => (IItemReadOnly)myObject;
         object IEnumerator.Current => myObject;
 
-        public ALFItemReadOnlyEnumerator(ALFItemReadOnly item) {
+        public ItemReadOnlyEnumerator(IItemReadOnly item) {
             this.item = item;
             this.index = -1;
         }
 
         public void Dispose()
-            => this.item = (ALFItemReadOnly)null;
+            => this.item = (IItemReadOnly)null;
 
         public bool MoveNext()
         {

@@ -200,11 +200,14 @@ namespace Cobilas.Collections {
 
         /// <summary>Indica se a lista está vazia.</summary>
         public static bool EmpytArray(ICollection array)
-            => array == null ? true : array.Count == 0;
+            => array == null || array.Count == 0;
 
         /// <summary>Indica o comprimento da lista.</summary>
         public static int ArrayLength(ICollection array)
             => array == null ? 0 : array.Count;
+
+        public static long ArrayLongLength(Array array)
+            => array == null ? 0L : array.LongLength;
 #pragma warning restore CS1591
     }
 }

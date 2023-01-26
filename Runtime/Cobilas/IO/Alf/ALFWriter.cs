@@ -1,163 +1,135 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Text;
-using Cobilas.Collections;
 using Cobilas.IO.Alf.Components;
 
 namespace Cobilas.IO.Alf {
-    public sealed class ALFWriter : IDisposable {
-        
-        private Stream stream;
-        private Encoding encoding;
-        private TextWriter textWriter;
-        private bool disposed;
-        private bool writingStarted;
-        private bool headerStarted;
-        private readonly ALFItem root;
-        private ALFItem temp;
+    public abstract class ALFWriter : IDisposable {
+        public const string n_Type = "type";
+        public const string alf_Type = ".alf";
+        public const string alf_Version = "1.0";
+        public const string n_Version = "version";
+        public const string n_Comment = "comment";
+        public const string n_Encoding = "encoding";
+        public const string n_BreakLine = "breakline";
+        public abstract ALFWriterSettings Settings { get; }
 
-        private ALFWriter() {
-            disposed = false;
-            temp = root = new ALFItem();
-            temp.isRoot = true;
-            temp.name = "Root";
-            stream = (Stream)null;
-            encoding = (Encoding)null;
-            textWriter = (TextWriter)null;
+        public abstract void StartElement(string name);
+        public abstract void EndElement();
+        public abstract void WriteElement(string name, string text);
+        public abstract void WriteText(bool value)    ;
+        public abstract void WriteText(string value)  ;
+        public abstract void WriteText(char value)    ;
+        public abstract void WriteText(char[] value)  ;
+        public abstract void WriteText(float value)   ;
+        public abstract void WriteText(double value)  ;
+        public abstract void WriteText(decimal value) ;
+        public abstract void WriteText(sbyte value)   ;
+        public abstract void WriteText(short value)   ;
+        public abstract void WriteText(int value)     ;
+        public abstract void WriteText(long value)    ;
+        public abstract void WriteText(byte value)    ;
+        public abstract void WriteText(ushort value)  ;
+        public abstract void WriteText(uint value)    ;
+        public abstract void WriteText(ulong value)   ;
+        public abstract void WriteText(DateTime value);
+        public abstract void StartElementComment(string text);
+        public abstract void StartElementBreakLine(int breaks);
+        public abstract void StartElementBreakLine();
+        public abstract void StartElementHeader();
+        public abstract void Close();
+        public abstract void Flush();
+        public abstract void Dispose();
+        protected abstract void InternalWriteText(object value);
+        protected abstract void InternalWriteText(char[] value);
+        protected abstract string AddEscapeOnSpecialCharactersInText(string value);
+
+        public static ALFWriter Create(TextWriter writer, ALFWriterSettings settings) {
+            settings.Set(writer, writer.Encoding);
+            return new ALFMemoryStreamWriter(settings);
         }
 
-        public void StartElement(string name) {
-            if (string.IsNullOrEmpty(name))
-                throw ALFERROR.PrintError("the markup cannot be given a blank name.");
+        public static ALFWriter Create(TextWriter writer)
+            => Create(writer, ALFMemoryWriterSetting.DefaultSettings);
 
-            if (name.Contains("\n") || name.Contains(":"))
-                throw ALFERROR.PrintError("name cannot contain ('\\n', ':')\"{0}\"", name);
-
-            writingStarted = true;
-            ALFItem itemtemp = new ALFItem();
-            itemtemp.name = name;
-            itemtemp.parent = temp;
-            temp.Add(itemtemp);
-            temp = itemtemp;
+        public static ALFWriter Create(Stream stream, Encoding encoding, ALFWriterSettings settings) {
+            settings.Set(stream, encoding);
+            return new ALFMemoryStreamWriter(settings);
         }
 
-        public void StartElementHeader() {
-            if (writingStarted || headerStarted)
-                throw new ALFException("The header must start first.");
-            headerStarted = true;
-            StartElement("header");
-                StartElement("version");
-                    WriteText(ALFCompiler.version);
-                EndElement();
-                StartElement("type");
-                    WriteText(".alf");
-                EndElement();
-            if (encoding != (Encoding)null) {
-                StartElement("encoding");
-                    WriteText(encoding.BodyName);
-                EndElement();
-            }
-            if (textWriter != (TextWriter)null) {
-                StartElement("encoding");
-                    WriteText(textWriter.Encoding.BodyName);
-                EndElement();
-            }
-            EndElement();
+        public static ALFWriter Create(Stream stream, ALFWriterSettings settings) {
+            settings.Set(stream, Encoding.UTF8);
+            return new ALFMemoryStreamWriter(settings);
         }
 
-        public void StartElementComment(string format, params object[] args) {
-            StartElement("comment");
-            WriteText(string.Format(format, args));
-            EndElement();
-            if (!headerStarted)
-                writingStarted = false;
-        }
-        public void StartElementComment(string text) => StartElementComment("{0}", text);
-        public void StartElementBreakLine(int breaks) {
-            StartElement("breakline");
-            for (int I = 0; I < breaks; I++)
-                WriteText("\r\n");
-            EndElement();
-            if (!headerStarted)
-                writingStarted = false;
-        }
-        public void StartElementBreakLine() => StartElementBreakLine(1);
-
-        public void WriteText(bool value) => I_WriteText(value);
-        public void WriteText(string value) => I_WriteText(value);
-        public void WriteText(char value) => I_WriteText(value);
-        public void WriteText(char[] value) => I_WriteText(value);
-        public void WriteText(float value) => I_WriteText(value);
-        public void WriteText(double value) => I_WriteText(value);
-        public void WriteText(decimal value) => I_WriteText(value);
-        public void WriteText(sbyte value) => I_WriteText(value);
-        public void WriteText(short value) => I_WriteText(value);
-        public void WriteText(int value) => I_WriteText(value);
-        public void WriteText(long value)=> I_WriteText(value);
-        public void WriteText(byte value) => I_WriteText(value);
-        public void WriteText(ushort value) => I_WriteText(value);
-        public void WriteText(uint value) => I_WriteText(value);
-        public void WriteText(ulong value) => I_WriteText(value);
-        public void WriteText(DateTime value) => I_WriteText(value);
-
-        public void EndElement() {
-            if (temp.isRoot)
-                throw new ALFException("No element has been started!");
-            ALFItem mtemp = temp.parent;
-            temp = mtemp;
-        }
-
-        public void Dispose() {
-            if (disposed)
-                throw new ObjectDisposedException($"The object {typeof(ALFWriter)} has already been discarded");
-            disposed = true;
-
-            int count = ArrayManipulation.ArrayLength(root.itens);
-            StringBuilder builder = new StringBuilder();
-            for (int I = 0; I < count; I++)
-                ALFCompiler.Writer(root.itens[I], 0, builder);
-
-            if (IsStrem()) {
-                byte[] chars = encoding.GetBytes(builder.ToString());
-                stream.Write(chars, 0, chars.Length);
-            } else {
-                textWriter.Write(builder.ToString());
-            }
-
-            stream = (Stream)null;
-            encoding = (Encoding)null;
-            textWriter = (TextWriter)null;
-        }
-
-        private void I_WriteText(object value) {
-            if (temp.isRoot)
-                throw new ALFException("No element has been started!");
-            temp.text.Append(value);
-        }
-
-        private void I_WriteText(char[] value) {
-            if (temp.isRoot)
-                throw new ALFException("No element has been started!");
-            temp.text.Append(value);
-        }
-
-        private bool IsStrem()
-            => stream != (Stream)null;
-
-        public static ALFWriter Create(TextWriter text) {
-            ALFWriter writer = new ALFWriter();
-            writer.textWriter = text;
-            return writer;
-        }
-
-        public static ALFWriter Create(Stream stream, Encoding encoding) {
-            ALFWriter res = new ALFWriter();
-            res.stream = stream;
-            res.encoding = encoding;
-            return res;
-        }
+        public static ALFWriter Create(Stream stream, Encoding encoding)
+            => Create(stream, encoding, ALFMemoryWriterSetting.DefaultSettings);
 
         public static ALFWriter Create(Stream stream)
-            => Create(stream, Encoding.UTF8);
+            => Create(stream, ALFMemoryWriterSetting.DefaultSettings);
+
+        public static bool ThisNameIsValid(string name)
+            => ThisNameIsValid(name, ALFRead.ValidCharacter);
+
+        public static bool ThisNameIsValid(string name, Func<char, bool> func)
+            => name.All(func);
+
+        protected static void WriteFlag(ALFItem root, int depth, StringBuilder builder, bool indent) {
+            foreach (ALFItem item in root)
+                switch (item.name) {
+                    case n_Comment:
+                        builder.AppendFormat("{0}[*{1}", GetTabs(depth, indent), item.text.ToString());
+                        builder.AppendFormat("{0}*]{1}", GetTabs(depth, indent), indent ? "\r\n" : string.Empty);
+                        break;
+                    case n_BreakLine:
+                        if (!indent) break;
+                        builder.Append(item.text.ToString());
+                        break;
+                    default:
+                        builder.AppendFormat("{0}[{1}", GetTabs(depth, indent), item.name);
+                        WriteFlagText(item, depth + 1, builder, indent);
+                        if (item.Count != 0) {
+                            builder.AppendFormat(":>{0}", indent ? "\r\n" : string.Empty);
+                            WriteFlag(item, depth + 1, builder, indent);
+                            builder.AppendFormat("{0}<]{1}", GetTabs(depth, indent), indent ? "\r\n" : string.Empty);
+                        } else {
+                            if (item.text.ToString().Contains('\n')) {
+                                builder.AppendFormat(":>", indent ? "\r\n" : string.Empty);
+                                builder.AppendFormat("{0}<]{1}", GetTabs(depth, indent), indent ? "\r\n" : string.Empty);
+                            }
+                            else builder.AppendFormat("]{0}", indent ? "\r\n" : string.Empty);
+                        }
+                        break;
+                }
+        }
+
+        internal static bool ThisTextIsValid(out char error, params char[] text) {
+            error = char.MinValue;
+            using (CharacterCursor cursor = new CharacterCursor(text))
+                while (cursor.MoveToCharacter()) {
+                    if (cursor.CharIsEqualToIndex("\\\\", "\\:", "\\[", "\\]", "\\<", "\\>"))
+                        cursor.MoveToCharacter(1L);
+                    else if (cursor.CharIsEqualToIndex('\\', ':', '[', ']', '<', '>')) {
+                        error = cursor.CurrentCharacter;
+                        return false;
+                    }
+                }
+            return true;
+        }
+
+        internal static bool ThisTextIsValid(out char error, string text)
+            => ThisTextIsValid(out error, text.ToCharArray());
+
+        private static string GetTabs(int depth, bool indent)
+            => indent ? string.Empty.PadRight(depth, '\t') : string.Empty;
+
+        private static void WriteFlagText(ALFItem root, int depth, StringBuilder builder, bool indent) {
+            string txt = root.text.ToString();
+            if (!string.IsNullOrEmpty(txt)) {
+                txt = txt.Replace("\n", string.Format("\n{0}:", GetTabs(depth, indent)));
+                builder.AppendFormat(":{0}", txt);
+            }
+        }
     }
 }

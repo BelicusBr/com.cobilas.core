@@ -2,121 +2,61 @@
 using System.IO;
 using System.Text;
 using Cobilas.IO.Alf.Components;
-using Cobilas.IO.Alf.Alfbt.Components.Compiler;
 
 namespace Cobilas.IO.Alf.Alfbt {
-    public sealed class ALFBTWriter : IDisposable {
-        private Stream stream;
-        private Encoding encoding;
-        private TextWriter textWriter;
-        private bool disposed;
-        private bool writingStarted;
-        private bool headerStarted;
-        private readonly ALFItem root;
+    public abstract class ALFBTWriter : ALFWriter {
+        public const string alfbtVersion = "1.5";
+        [Obsolete("Use StartElementHeader()")]
+        public abstract void WriterHeaderFlag();
+        [Obsolete("Use WriteElement(string, string)")]
+        public abstract void WriterMarkingFlag(string name, string value);
+        [Obsolete("Use StartElementComment(string)")]
+        public abstract void WriterCommentFlag(string text);
+        [Obsolete("Use WriteElement(string, string)")]
+        public abstract void WriterTextFlag(string name, string value);
+        [Obsolete("Use StartElementBreakLine(int) or StartElementBreakLine()")]
+        public abstract void WriteLineBreak();
+        public abstract bool Contains(string name);
 
-        private ALFBTWriter() {
-            disposed = false;
-            root = new ALFItem();
-            root.isRoot = true;
-            root.name = "Root";
-            stream = (Stream)null;
-            encoding = (Encoding)null;
-            textWriter = (TextWriter)null;
+        public static new ALFBTWriter Create(TextWriter writer, ALFWriterSettings settings) {
+            settings.Set(writer, writer.Encoding);
+            return new ALFBTMemoryStreamWriter(settings);
         }
 
-        public void WriterHeaderFlag() {
-            if (writingStarted || headerStarted)
-                throw ALFBTFormatException.GetHeaderSecond();
-            headerStarted = true;
-            WriteFlag(ALFBTCompiler_1_0.n_Version, ALFBTCompiler.version);
-            WriteFlag(ALFBTCompiler_1_0.n_Type, ".alfbt");
-            WriteFlag(ALFBTCompiler_1_0.n_Encoding, IsStrem() ? encoding.BodyName : textWriter.Encoding.BodyName);
+        public static new ALFBTWriter Create(TextWriter writer)
+            => Create(writer, ALFMemoryWriterSetting.DefaultSettings);
+
+        public static new ALFBTWriter Create(Stream stream, Encoding encoding, ALFWriterSettings settings) {
+            settings.Set(stream, encoding);
+            return new ALFBTMemoryStreamWriter(settings);
         }
 
-        public void WriterMarkingFlag(string name, string value) {
-            if (string.IsNullOrEmpty(value))
-                throw ALFBTFormatException.GetEmptyValue(false);
-            if (value.Contains('\n'))
-                throw ALFBTFormatException.GetException(
-                    "Markup flag value cannot contain line break!",
-                    "O valor de bandeira de marcação não pode conter quebra de linha!"
-                    );
-            writingStarted = true;
-            WriteFlag(name, value);
+        public static new ALFBTWriter Create(Stream stream, ALFWriterSettings settings) {
+            settings.Set(stream, Encoding.UTF8);
+            return new ALFBTMemoryStreamWriter(settings);
         }
 
-        public void WriteSpacing()
-            => WriteSpacing(0);
+        public static new ALFBTWriter Create(Stream stream, Encoding encoding)
+            => Create(stream, encoding, ALFMemoryWriterSetting.DefaultSettings);
 
-        public void WriteSpacing(int spacings) {
-            for (int I = 0; I < spacings; I++) {
-                if (!headerStarted)
-                    writingStarted = false;
-                WriteFlag(ALFBTCompiler_1_0.n_BreakLine, "\r\n");
+        public static new ALFBTWriter Create(Stream stream)
+            => Create(stream, ALFMemoryWriterSetting.DefaultSettings);
+
+        protected static void WriterALFBTFlag(ALFItem root, StringBuilder builder, bool indent) {
+            foreach (ALFItem item in root) {
+                switch (item.name) {
+                    case n_Comment:
+                        builder.AppendFormat("#>{0}<#{1}", item.text, indent ? "\r\n" : string.Empty);
+                        break;
+                    case n_BreakLine:
+                        if (indent)
+                            builder.Append(item.text);
+                        break;
+                    default:
+                        builder.AppendFormat("#! {0}:/*{1}*/{2}", item.name, item.text, indent ? "\r\n" : string.Empty);
+                        break;
+                }
             }
         }
-
-        public void WriterCommentFlag(string text) {
-            WriteFlag(ALFBTCompiler_1_0.n_Comment, text);
-            if (!headerStarted)
-                writingStarted = false;
-        }
-
-        public void WriterTextFlag(string name, string value) {
-            writingStarted = true;
-            WriteFlag(name, string.IsNullOrEmpty(value) ? "\r\n" : value);
-        }
-
-        [Obsolete("Use WriteSpacing()")]
-        public void WriteLineBreak()
-            => WriteSpacing();
-
-        public void Dispose() {
-            if (disposed)
-                throw new ObjectDisposedException($"The object {typeof(ALFWriter)} has already been discarded");
-            disposed = true;
-            StringBuilder builder = new StringBuilder();
-            ALFBTCompiler.Writer(root, builder);
-
-            if (IsStrem()) {
-                byte[] bytes = encoding.GetBytes(builder.ToString());
-                stream.Write(bytes);
-            } else {
-                textWriter.Write(builder.ToString());
-            }
-
-            root.Dispose();
-            stream = (Stream)null;
-            encoding = (Encoding)null;
-            textWriter = (TextWriter)null;
-        }
-
-        private void WriteFlag(string name, string value) {
-            if (string.IsNullOrEmpty(name))
-                throw ALFBTFormatException.GetEmptyValue();
-            ALFItem item = new ALFItem();
-            item.name = name;
-            item.text.Append(value);
-            root.Add(item);
-        }
-
-        private bool IsStrem()
-            => stream != (Stream)null;
-
-        public static ALFBTWriter Create(TextWriter writer) {
-            ALFBTWriter a_writer = new ALFBTWriter();
-            a_writer.textWriter = writer;
-            return a_writer;
-        }
-
-        public static ALFBTWriter Create(Stream stream, Encoding encoding) {
-            ALFBTWriter a_writer = new ALFBTWriter();
-            a_writer.stream = stream;
-            a_writer.encoding = encoding;
-            return a_writer;
-        }
-
-        public static ALFBTWriter Create(Stream stream)
-            => Create(stream, Encoding.UTF8);
     }
 }

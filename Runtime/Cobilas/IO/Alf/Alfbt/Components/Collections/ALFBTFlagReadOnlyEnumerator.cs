@@ -1,22 +1,23 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using Cobilas.IO.Alf.Components.Collections;
 
 namespace Cobilas.IO.Alf.Alfbt.Components.Collections {
-    public sealed class ALFBTFlagReadOnlyEnumerator : IEnumerator<ALFBTFlagReadOnly> {
-        private ALFBTFlagReadOnly item;
+    public sealed class ALFBTFlagReadOnlyEnumerator : IEnumerator<IItemReadOnly> {
+        private IItemReadOnly item;
         private int index;
         private object myObject;
 
-        public ALFBTFlagReadOnly Current => (ALFBTFlagReadOnly)myObject;
+        public IItemReadOnly Current => (IItemReadOnly)myObject;
         object IEnumerator.Current => myObject;
 
-        public ALFBTFlagReadOnlyEnumerator(ALFBTFlagReadOnly item) {
+        public ALFBTFlagReadOnlyEnumerator(IItemReadOnly item) {
             this.item = item;
             this.index = -1;
         }
 
         public void Dispose()
-            => this.item = (ALFBTFlagReadOnly)null;
+            => this.item = (IItemReadOnly)null;
 
         public bool MoveNext()
         {

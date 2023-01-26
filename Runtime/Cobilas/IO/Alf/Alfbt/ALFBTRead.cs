@@ -1,167 +1,245 @@
 ﻿using System;
 using System.IO;
 using System.Text;
-using Cobilas.Collections;
+using Cobilas.IO.Alf.Components;
 using Cobilas.IO.Alf.Alfbt.Flags;
 using Cobilas.IO.Alf.Alfbt.Components;
-using Cobilas.IO.Alf.Alfbt.Components.Compiler;
-using Cobilas.IO.Alf.Alfbt.Components.Collections;
-using System.Collections.Generic;
-using System.Collections;
+using Cobilas.IO.Alf.Components.Collections;
 
 namespace Cobilas.IO.Alf.Alfbt {
-    /// <summary>Responsavel pela leitura de um texto alfbt.</summary>
-    public sealed class ALFBTRead : IDisposable, IReadOnlyArray<ALFBTFlagReadOnly> {
+    public abstract class ALFBTRead : ALFRead {
+        [Obsolete("Use IItemReadOnly:GetFlag(string)")]
+        public abstract HeaderFlag GetHeaderFlag();
+        [Obsolete("Use IItemReadOnly:GetFlag(string)")]
+        public abstract MarkingFlag GetMarkingFlag(string name);
+        [Obsolete("Use IItemReadOnly:GetFlag(string)")]
+        public abstract TextFlag GetTextFlag(string name);
+        [Obsolete("Use IItemReadOnly:GetFlag(string)")]
+        public abstract MarkingFlag[] GetAllMarkingFlags();
+        [Obsolete("Use IItemReadOnly:GetFlag(string)")]
+        public abstract TextFlag[] GetAllTextFlags();
+        public abstract CommentFlag GetCommentFlag();
+        [Obsolete("Use bool:FlagExists(string)")]
+        public abstract bool TextFlagExists(string name);
+        [Obsolete("Use bool:FlagExists(string)")]
+        public abstract bool MarkingFlagExists(string name);
+        [Obsolete("Use bool:FlagExists(string)")]
+        public abstract bool HeaderFlagExists(string name);
+        [Obsolete("Use bool:FlagExists(string)")]
+        public abstract bool FlagExists(string name, AlfbtFlags flags);
+        public abstract bool FlagExists(string name);
+        public abstract IItemReadOnly GetFlag(string name);
 
-        private readonly ALFRead myRead;
-
-        public int Count => ((IReadOnlyArray)ReadOnly).Count;
-        public ALFBTFlagReadOnly ReadOnly => new ALFBTFlagReadOnly(myRead.ReadOnly);
-
-        object IReadOnlyArray.this[int index] => ((IReadOnlyArray)ReadOnly)[index];
-        public ALFBTFlagReadOnly this[int index] => ((IReadOnlyArray<ALFBTFlagReadOnly>)ReadOnly)[index];
-
-        private ALFBTRead(ALFRead read) {
-            this.myRead = read;
+        public static new ALFBTRead Create(TextReader reader, ALFReadSettings settings) {
+            settings.Set(reader, Encoding.Default);
+            return new ALFBTMemoryStreamRead(settings);
         }
 
-        [Obsolete("Use ALFBTFlagReadOnly:GetFlag(string)")]
-        public HeaderFlag GetHeaderFlag()
-            => new HeaderFlag(
-                GetFlag(ALFBTCompiler_1_0.n_Version),
-                GetFlag(ALFBTCompiler_1_0.n_Type),
-                GetFlag(ALFBTCompiler_1_0.n_Encoding)
-                );
-
-        [Obsolete("Use ALFBTFlagReadOnly:GetFlag(string)")]
-        public MarkingFlag GetMarkingFlag(string name)
-            => new MarkingFlag(I_GetMarkingFlag(name));
-
-        [Obsolete("Use ALFBTFlagReadOnly:GetFlag(string)")]
-        public TextFlag GetTextFlag(string name)
-            => new TextFlag(I_GetTextFlag(name));
-
-        [Obsolete("Use ALFBTFlagReadOnly:GetFlag(string)")]
-        public MarkingFlag[] GetAllMarkingFlags() {
-            MarkingFlag[] res = null;
-            foreach (var item in ReadOnly)
-                if (!item.ToString().Contains("\n"))
-                    ArrayManipulation.Add(new MarkingFlag(item), ref res);
-            return res;
+        public static new ALFBTRead Create(Stream stream, Encoding encoding, ALFReadSettings settings) {
+            settings.Set(stream, encoding);
+            return new ALFBTMemoryStreamRead(settings);
         }
 
-        [Obsolete("Use ALFBTFlagReadOnly:GetFlag(string)")]
-        public TextFlag[] GetAllTextFlags() {
-            TextFlag[] res = null;
-            foreach (var item in ReadOnly)
-                if (item.ToString().Contains("\n"))
-                    ArrayManipulation.Add(new TextFlag(item), ref res);
-            return res;
+        public static new ALFBTRead Create(Stream stream, ALFReadSettings settings) {
+            settings.Set(stream, Encoding.UTF8);
+            return new ALFBTMemoryStreamRead(settings);
         }
 
-        public CommentFlag GetCommentFlag() {
-            CommentFlag comment = new CommentFlag();
-            foreach (var item in ReadOnly)
-                if (item.Name == "comment")
-                    comment.Add(item);
-            return comment;
-        }
+        public static new ALFBTRead Create(TextReader reader)
+            => Create(reader, ALFMemoryReadSettings.DefaultSettings);
 
-        [Obsolete("Use bool:FlagExists(string)")]
-        public bool TextFlagExists(string name)
-            => FlagExists(name, AlfbtFlags.TextFlag);
+        public static new ALFBTRead Create(Stream stream, Encoding encoding)
+            => Create(stream, encoding, ALFMemoryReadSettings.DefaultSettings);
 
-        [Obsolete("Use bool:FlagExists(string)")]
-        public bool MarkingFlagExists(string name)
-            => FlagExists(name, AlfbtFlags.MarkingFlag);
+        public static new ALFBTRead Create(Stream stream)
+            => Create(stream, ALFMemoryReadSettings.DefaultSettings);
 
-        [Obsolete("Use bool:FlagExists(string)")]
-        public bool HeaderFlagExists(string name)
-            => FlagExists(name, AlfbtFlags.HeaderFlag);
-
-        [Obsolete("Use bool:FlagExists(string)")]
-        public bool FlagExists(string name, AlfbtFlags flags) {
-            bool res = false;
-            switch (flags) {
-                case AlfbtFlags.MarkingFlag:
-                    res = !GetFlag(name).ToString().Contains("\n") &&
-                        name != ALFBTCompiler_1_0.n_Version &&
-                        name != ALFBTCompiler_1_0.n_Type &&
-                        name != ALFBTCompiler_1_0.n_Encoding;
-                    return res;
-                case AlfbtFlags.TextFlag:
-                    res = GetFlag(name).ToString().Contains("\n") &&
-                    name != ALFBTCompiler_1_0.n_Version &&
-                    name != ALFBTCompiler_1_0.n_Type &&
-                    name != ALFBTCompiler_1_0.n_Encoding;
-                    return res;
-                case AlfbtFlags.HeaderFlag:
-                    res = GetFlag(name) != (ALFBTFlagReadOnly)null &&
-                    (name == ALFBTCompiler_1_0.n_Version ||
-                    name == ALFBTCompiler_1_0.n_Type ||
-                    name == ALFBTCompiler_1_0.n_Encoding);
-                    return res;
-                default: return res;
+        protected static void GetALFBTFlags(ALFItem root, CharacterCursor cursor) {
+            ALFBTVersion version = GetALFBTFlagVersion(cursor);
+            cursor.Reset();
+            switch (version) {
+                case ALFBTVersion.alfbt_1_0:
+                    GetALFBTFlags10(root, cursor);
+                    break;
+                case ALFBTVersion.alfbt_1_5:
+                    GetALFBTFlags15(root, cursor);
+                    break;
+                case ALFBTVersion.UnknownVersion:
+                    throw ALFBTException.UnknownVersion();
             }
         }
 
-        public bool FlagExists(string name) {
-            foreach (var item in ReadOnly)
-                if (item.Name == name)
-                    return true;
+        #region ALFBT 1.0
+        private static void GetALFBTFlags10(ALFItem root, CharacterCursor cursor) {
+            ALFItem item;
+            while (cursor.MoveToCharacter()) {
+                CharacterCursor.LineEndColumn scursor = cursor.Cursor;
+                if (cursor.CharIsEqualToIndex("#$ ")) {
+                    cursor.MoveToCharacter(2L);
+                    GetFlagName(item = ALFItem.Empty, "=", cursor);
+                    if (cursor.CharIsEqualToIndex("="))
+                        GetFlagText(item, "\n", (c) => false, HeaderValueIsValid, cursor);
+                    if (AddFlag(root, item))
+                        throw ALFBTException.FlagAlreadyExists(scursor, item.name);
+                    continue;
+                } else if (cursor.CharIsEqualToIndex("#! ")) {
+                    cursor.MoveToCharacter(2L);
+                    GetFlagName(item = ALFItem.Empty, "=", cursor);
+                    if (cursor.CharIsEqualToIndex("="))
+                        GetFlagText(item, "\n", (c) => false, FlagValueIsValid, cursor);
+                    if (AddFlag(root, item))
+                        throw ALFBTException.FlagAlreadyExists(scursor, item.name);
+                    continue;
+                } else if (cursor.CharIsEqualToIndex("#? ")) {
+                    cursor.MoveToCharacter(2L);
+                    GetFlagName(item = ALFItem.Empty, "=@(", cursor);
+                    if (cursor.CharIsEqualToIndex("=@("))
+                        GetFlagText(item, ")@", IsEscape10, IsExclude10, cursor);
+                    if (AddFlag(root, item))
+                        throw ALFBTException.FlagAlreadyExists(scursor, item.name);
+                    continue;
+                } else if (cursor.CharIsEqualToIndex("#* ")) {
+                    cursor.MoveToCharacter(2L);
+                    GetFlageComment(item = ALFItem.DefaultComment, "\n", cursor);
+                    root.Add(item);
+                    continue;
+                }
+            }
+        }
+
+        public static bool IsExclude10(CharacterCursor cursor)
+            => cursor.CharIsEqualToIndex('\\', '@', '(', ')');
+
+        private static bool IsEscape10(CharacterCursor cursor) {
+            if (cursor.CharIsEqualToIndex("\\\\", "\\@", "\\(", "\\)")) {
+                cursor.MoveToCharacter(1L);
+                return true;
+            }
             return false;
         }
 
-        public void Dispose() {
-            myRead?.Dispose();
-        }
+        private static bool FlagValueIsValid(CharacterCursor cursor)
+            => ValidCharacter(cursor.CurrentCharacter);
 
-        public ALFBTFlagReadOnly GetFlag(string name) {
-            foreach (var item in ReadOnly)
-                if (item.Name == name)
-                    return item;
-            return (ALFBTFlagReadOnly)null;
-        }
+        private static bool HeaderValueIsValid(CharacterCursor cursor)
+            => ValidCharacter(cursor.CurrentCharacter) || cursor.CurrentCharacter == '-';
 
-        public IEnumerator<ALFBTFlagReadOnly> GetEnumerator()
-            => ((IEnumerable<ALFBTFlagReadOnly>)ReadOnly).GetEnumerator();
+        #endregion
+        #region ALFBT 1.5
+        private static void GetALFBTFlags15(ALFItem root, CharacterCursor cursor) {
+            ALFItem item;
+            while (cursor.MoveToCharacter()) {
+                if (cursor.CharIsEqualToIndex("#! ")) {
+                    CharacterCursor.LineEndColumn scursor = cursor.Cursor;
+                    cursor.MoveToCharacter(2L);
+                    GetFlagName(item = ALFItem.Empty, ":/*", cursor);
+                    if (cursor.CharIsEqualToIndex(":/*")) {
+                        cursor.MoveToCharacter(2L);
+                        GetFlagText(item, "*/", IsEscape15, IsExclude15, cursor);
+                    }
+                    if (AddFlag(root, item))
+                        throw ALFBTException.FlagAlreadyExists(scursor, item.name);
+                    continue;
+                } else if (cursor.CharIsEqualToIndex("#> ")) {
+                    cursor.MoveToCharacter(2L);
+                    GetFlageComment(item = ALFItem.DefaultComment, "<#", cursor);
+                    root.Add(item);
+                    continue;
+                }
 
-        IEnumerator IEnumerable.GetEnumerator()
-            => ((IEnumerable)ReadOnly).GetEnumerator();
-
-        private ALFBTFlagReadOnly I_GetMarkingFlag(string name) {
-            ALFBTFlagReadOnly readOnly = GetFlag(name);
-            if (readOnly != (ALFBTFlagReadOnly)null)
-                if (!readOnly.ToString().Contains("\n"))
-                    return readOnly;
-            return (ALFBTFlagReadOnly)null;
-        }
-
-        private ALFBTFlagReadOnly I_GetTextFlag(string name) {
-            ALFBTFlagReadOnly readOnly = GetFlag(name);
-            if (readOnly != (ALFBTFlagReadOnly)null)
-                if (readOnly.ToString().Contains("\n"))
-                    return readOnly;
-            return (ALFBTFlagReadOnly)null;
-        }
-
-        public static ALFBTRead Create(TextReader reader) {
-            string[] lines = (string[])null;
-            string line;
-            while ((line = reader.ReadLine()) != (string)null)
-                ArrayManipulation.Add(line, ref lines);
-
-            using (StringWriter stringWriter = new StringWriter()) {
-                using (ALFWriter writer = ALFWriter.Create(stringWriter))
-                    ALFBTCompiler.Read(lines, writer);
-                return new ALFBTRead(ALFRead.Create(new StringReader(stringWriter.ToString())));
+                if (!IsWhiteSpace(cursor.CurrentCharacter))
+                    throw ALFException.SymbolNotIdentified(cursor.Cursor, cursor.CurrentCharacter);
             }
         }
 
-        public static ALFBTRead Create(Stream stream, Encoding encoding)
-            => Create(new StringReader(stream.GetString(encoding)));
+        private static bool IsExclude15(CharacterCursor cursor)
+            => cursor.CharIsEqualToIndex('\\', '/', '*');
 
-        public static ALFBTRead Create(Stream stream)
-            => Create(stream, Encoding.UTF8);
+        private static bool IsEscape15(CharacterCursor cursor) {
+            if (cursor.CharIsEqualToIndex("\\\\", "\\/", "\\*")) {
+                cursor.MoveToCharacter(1L);
+                return true;
+            }
+            return false;
+        }
+
+        #endregion
+
+        private static bool AddFlag(ALFItem root, ALFItem item) {
+            if (root.Contains(item.name)) return false;
+            root.Add(item);
+            return true;
+        }
+
+        private static void GetFlageComment(ALFItem item, string escape, CharacterCursor cursor) {
+            CharacterCursor.LineEndColumn scurso = cursor.Cursor;
+            while (cursor.MoveToCharacter()) {
+                if (cursor.CharIsEqualToIndex(escape))
+                    return;
+                item.text.Append(cursor.CurrentCharacter);
+            }
+            throw ALFException.CommentNotFinalized(scurso);
+        }
+
+        private static void GetFlagName(ALFItem item, string separator, CharacterCursor cursor) {
+            StringBuilder builder = new StringBuilder();
+            while (cursor.MoveToCharacter()) {
+                if (cursor.CharIsEqualToIndex(separator)) {
+                    item.name = builder.ToString();
+                    return;
+                }
+                if (!ValidCharacter(cursor.CurrentCharacter))
+                    throw ALFException.InvalidName(cursor.Cursor, builder.Append(cursor.CurrentCharacter).ToString());
+                builder.Append(cursor.CurrentCharacter);
+            }
+        }
+
+        private static void GetFlagText(ALFItem item, string escape,
+            Func<CharacterCursor, bool> isEscape,
+            Func<CharacterCursor, bool> isExclude, CharacterCursor cursor) {
+            CharacterCursor.LineEndColumn scursor = cursor.Cursor;
+            while (cursor.MoveToCharacter()) {
+                if (cursor.CharIsEqualToIndex(escape)) {
+                    cursor.MoveToCharacter(1L);
+                    return;
+                }
+                if (isEscape(cursor)) {
+                    item.text.Append(cursor.CurrentCharacter);
+                    cursor.MoveToCharacter(1L);
+                    item.text.Append(cursor.CurrentCharacter);
+                    continue;
+                }
+                if (isExclude(cursor))
+                    throw ALFException.InvalidText(cursor.Cursor, cursor.CurrentCharacter);
+                item.text.Append(cursor.CurrentCharacter);
+            }
+            throw ALFException.UnfinishedTextBlock(scursor);
+        }
+
+        private static ALFBTVersion GetALFBTFlagVersion(CharacterCursor cursor) {
+            bool determined = false;
+            while (cursor.MoveToCharacter()) {
+                if (cursor.CharIsEqualToIndex('\n'))
+                    break;
+                if (determined) {
+                    if (cursor.CharIsEqualToIndex(":/*"))
+                        return ALFBTVersion.alfbt_1_5;
+                    else if (cursor.CharIsEqualToIndex("#$ "))
+                        return ALFBTVersion.alfbt_1_0;
+                    continue;
+                }
+                if (cursor.CharIsEqualToIndex("#$ ") ||
+                    cursor.CharIsEqualToIndex("#? ") ||
+                    cursor.CharIsEqualToIndex("#* "))
+                    return ALFBTVersion.alfbt_1_0;
+
+                if (cursor.CharIsEqualToIndex("#> "))
+                    return ALFBTVersion.alfbt_1_5;
+
+                if (cursor.CharIsEqualToIndex("#! "))
+                    determined = true;
+            }
+            return ALFBTVersion.UnknownVersion;
+        }
     }
 }
