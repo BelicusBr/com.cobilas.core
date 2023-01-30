@@ -95,7 +95,6 @@ namespace Cobilas.Collections {
         public static void Add<T>(T item, ref T[] list)
             => Insert<T>(item, ArrayLength(list), ref list);
 
-#pragma warning disable CS1591
         public static T[] Remove<T>(int index, int length, T[] list) {
             T[] newList = new T[list.Length - length];
             Array.Copy(list, 0, newList, 0, index);
@@ -208,6 +207,5 @@ namespace Cobilas.Collections {
 
         public static long ArrayLongLength(Array array)
             => array == null ? 0L : array.LongLength;
-#pragma warning restore CS1591
     }
 }

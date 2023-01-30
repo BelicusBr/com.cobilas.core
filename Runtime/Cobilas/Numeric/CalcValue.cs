@@ -47,7 +47,6 @@ namespace Cobilas.Numeric {
             StringBuilder builder = new StringBuilder(calc.value);
             builder.Append(value);
             calc.value = builder.ToString();
-            builder = (StringBuilder)null;
             return calc;
         }
     }

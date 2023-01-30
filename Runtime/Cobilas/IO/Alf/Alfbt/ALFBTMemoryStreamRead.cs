@@ -1,4 +1,5 @@
-﻿using Cobilas.Collections;
+﻿using System;
+using Cobilas.Collections;
 using Cobilas.IO.Alf.Components;
 using Cobilas.IO.Alf.Alfbt.Flags;
 using System.Collections.Generic;
@@ -26,7 +27,7 @@ namespace Cobilas.IO.Alf.Alfbt {
 
         public override void Dispose() {
             if (disposedValue)
-                throw ALFException.GetObjectDisposedException<ALFBTMemoryStreamRead>();
+                throw ALFException.GetALFException(1000, GetType());
             disposedValue = true;
             root.Dispose();
             memory.Dispose();
@@ -37,29 +38,22 @@ namespace Cobilas.IO.Alf.Alfbt {
         public override void Flush() => memory.Flush();
 
         public override bool FlagExists(string name, AlfbtFlags flags) {
-            switch (flags) {
-                case AlfbtFlags.MarkingFlag:
-                    return !GetFlag(name).ToString().Contains("\n") &&
-                        name != ALFWriter.n_Version &&
-                        name != ALFWriter.n_Type &&
-                        name != ALFWriter.n_Encoding;
-                case AlfbtFlags.TextFlag:
-                    return GetFlag(name).ToString().Contains("\n") &&
-                    name != ALFWriter.n_Version &&
-                    name != ALFWriter.n_Type &&
-                    name != ALFWriter.n_Encoding;
-                case AlfbtFlags.HeaderFlag:
-                    return GetFlag(name) != (ALFBTFlagReadOnly)null &&
-                    (name == ALFWriter.n_Version ||
-                    name == ALFWriter.n_Type ||
-                    name == ALFWriter.n_Encoding);
-                default: return false;
-            }
+            foreach (IItemReadOnly item in GetFlags(name))
+                switch (flags) {
+                    case AlfbtFlags.MarkingFlag:
+                        return GetFlagName(item.Name) == name && GetFlagPrefix(item.Name) == "tg";
+                    case AlfbtFlags.TextFlag:
+                        return GetFlagName(item.Name) == name && GetFlagPrefix(item.Name) == "txt";
+                    case AlfbtFlags.HeaderFlag:
+                        return GetFlagName(item.Name) == name && GetFlagPrefix(item.Name) == "hd";
+                    default: return false;
+                }
+            return false;
         }
 
         public override bool FlagExists(string name) {
             foreach (ALFItem item in root)
-                if (item.name == name)
+                if (GetFlagName(item.name) == name)
                     return true;
             return false;
         }
@@ -67,9 +61,7 @@ namespace Cobilas.IO.Alf.Alfbt {
         public override MarkingFlag[] GetAllMarkingFlags() {
             MarkingFlag[] res = null;
             foreach (var item in ReadOnly)
-                if (!item.ToString().Contains("\n") && item.Name != ALFWriter.n_Version
-                    && item.Name != ALFWriter.n_Encoding
-                    && item.Name != ALFWriter.n_Type)
+                if (GetFlagPrefix(item.Name) == "tg")
                     ArrayManipulation.Add(new MarkingFlag(item as ALFBTFlagReadOnly), ref res);
             return res;
         }
@@ -77,7 +69,7 @@ namespace Cobilas.IO.Alf.Alfbt {
         public override TextFlag[] GetAllTextFlags() {
             TextFlag[] res = null;
             foreach (var item in ReadOnly)
-                if (item.ToString().Contains("\n"))
+                if (GetFlagPrefix(item.Name) == "txt")
                     ArrayManipulation.Add(new TextFlag(item as ALFBTFlagReadOnly), ref res);
             return res;
         }
@@ -85,7 +77,7 @@ namespace Cobilas.IO.Alf.Alfbt {
         public override CommentFlag GetCommentFlag() {
             CommentFlag comment = new CommentFlag();
             foreach (var item in ReadOnly)
-                if (item.Name == ALFWriter.n_Comment)
+                if (item.Name == ALFBTUtility.n_Comment)
                     comment.Add(item as ALFBTFlagReadOnly);
             return comment;
         }
@@ -95,16 +87,16 @@ namespace Cobilas.IO.Alf.Alfbt {
 
         public override IItemReadOnly GetFlag(string name) {
             foreach (var item in ReadOnly)
-                if (item.Name == name)
+                if (GetFlagName(item.Name) == name)
                     return item;
             return (ALFBTFlagReadOnly)null;
         }
 
         public override HeaderFlag GetHeaderFlag()
             => new HeaderFlag(
-                GetFlag(ALFWriter.n_Version) as ALFBTFlagReadOnly,
-                GetFlag(ALFWriter.n_Type) as ALFBTFlagReadOnly,
-                GetFlag(ALFWriter.n_Encoding) as ALFBTFlagReadOnly
+                I_GetHeaderFlag(ALFBTUtility.n_Version) as ALFBTFlagReadOnly,
+                I_GetHeaderFlag(ALFBTUtility.n_Type) as ALFBTFlagReadOnly,
+                I_GetHeaderFlag(ALFBTUtility.n_Encoding) as ALFBTFlagReadOnly
                 );
 
         public override MarkingFlag GetMarkingFlag(string name)
@@ -129,25 +121,57 @@ namespace Cobilas.IO.Alf.Alfbt {
                 RemoveEscapeOnSpecialCharactersInALFItem(root);
         }
 
+        private IItemReadOnly[] GetFlags(string name) {
+            IItemReadOnly[] res = null;
+            foreach (IItemReadOnly item in ReadOnly)
+                if (GetFlagName(item.Name) == name)
+                    ArrayManipulation.Add(item, ref res);
+            return res;
+        }
+
+        private string GetFlagName(string name) {
+            string prefix = GetFlagPrefix(name);
+            if (name.Contains('/') && (prefix == "hd" || prefix == "txt"))
+                return name.Remove(0, name.IndexOf('/') + 1);
+            return name;
+        }
+
+        private string GetFlagPrefix(string name) {
+            if (name.Contains('/'))
+                return name.Remove(name.IndexOf('/'));
+            return "tg";
+        }
+
+        private IItemReadOnly I_GetHeaderFlag(string name) {
+            IItemReadOnly[] readOnly = GetFlags(name);
+            foreach (var item in readOnly)
+                if (GetFlagName(item.Name) == name)
+                    if (GetFlagPrefix(item.Name) == "hd")
+                        return item;
+            return (ALFBTFlagReadOnly)null;
+        }
+
         private IItemReadOnly I_GetMarkingFlag(string name) {
-            IItemReadOnly readOnly = GetFlag(name);
-            if (readOnly != (ALFBTFlagReadOnly)null)
-                if (!readOnly.ToString().Contains("\n"))
-                    return readOnly;
+            IItemReadOnly[] readOnly = GetFlags(name);
+            foreach (var item in readOnly)
+                if (GetFlagName(item.Name) == name)
+                    if (GetFlagPrefix(item.Name) == "tg")
+                        return item;
             return (ALFBTFlagReadOnly)null;
         }
 
         private IItemReadOnly I_GetTextFlag(string name) {
-            IItemReadOnly readOnly = GetFlag(name);
-            if (readOnly != (ALFBTFlagReadOnly)null)
-                if (readOnly.ToString().Contains("\n"))
-                    return readOnly;
+            IItemReadOnly[] readOnly = GetFlags(name);
+            foreach (var item in readOnly)
+                if (GetFlagName(item.Name) == name)
+                    if (GetFlagPrefix(item.Name) == "txt")
+                        return item;
             return (ALFBTFlagReadOnly)null;
         }
 
         protected override void RemoveEscapeOnSpecialCharactersInALFItem(ALFItem root) {
             foreach (ALFItem item in root) {
-                if (item.name == ALFWriter.n_Comment) continue;
+                if (item.name == ALFBTUtility.n_Comment) continue;
                 _ = item.text.Replace("\\\\", "\\").Replace("\\/", "/").Replace("\\*", "*");
             }
         }

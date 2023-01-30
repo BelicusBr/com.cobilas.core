@@ -26,9 +26,9 @@ namespace Cobilas.IO.Alf {
 
         public override void Dispose() {
             if (disposedValue)
-                throw ALFException.GetObjectDisposedException<ALFMemoryStreamWriter>();
+                throw ALFException.GetALFException(1000, GetType());
             else if (!root.isRoot)
-                throw ALFException.UnfinishedFlag(root.name);
+                throw ALFException.GetALFException(1006, root.name);
 
             disposedValue = true;
             StringBuilder builder = new StringBuilder();
@@ -40,21 +40,21 @@ namespace Cobilas.IO.Alf {
 
         public override void StartElement(string name) {
             if (string.IsNullOrEmpty(name))
-                throw ALFException.BlankName();
-            if (!ThisNameIsValid(name))
-                throw ALFException.InvalidName(name);
+                throw ALFException.GetALFException(1001);
+            if (!ALFUtility.ThisNameIsValid(name))
+                throw ALFException.GetALFException(1009, name);
             writingStarted = true;
             root.Add(root = new ALFItem(name));
         }
 
         public override void EndElement() {
             if (root.isRoot)
-                throw ALFException.DoNotLeaveTheRoot();
+                throw ALFException.GetALFException(1007);
             this.root = this.root.parent;
         }
 
         public override void StartElementBreakLine(int breaks) {
-            StartElement(n_BreakLine);
+            StartElement(ALFUtility.n_BreakLine);
             for (int I = 0; I < breaks; I++)
                 WriteText("\r\n");
             EndElement();
@@ -65,18 +65,18 @@ namespace Cobilas.IO.Alf {
             => StartElementBreakLine(1);
 
         public override void StartElementComment(string text) {
-            WriteElement(n_Comment, text);
+            WriteElement(ALFUtility.n_Comment, text);
             writingStarted = headerStarted;
         }
 
         public override void StartElementHeader() {
             if (writingStarted || headerStarted)
-                throw ALFException.HeaderInSecond();
+                throw ALFException.GetALFException(1004);
             headerStarted = true;
             StartElement("Header");
-            WriteElement(n_Version, alf_Version);
-            WriteElement(n_Type, alf_Type);
-            WriteElement(n_Encoding, memory.Encoding.BodyName);
+            WriteElement(ALFUtility.n_Version, ALFUtility.alf_Version);
+            WriteElement(ALFUtility.n_Type, ALFUtility.alf_Type);
+            WriteElement(ALFUtility.n_Encoding, memory.Encoding.BodyName);
             EndElement();
         }
 
@@ -135,36 +135,37 @@ namespace Cobilas.IO.Alf {
             => InternalWriteText(value);
 
         protected override void InternalWriteText(object value) {
-            if (value is char[] chars) {
-                InternalWriteText(chars);
-                return;
-            } else if (value is string stg) {
-                if (memory.AddEscapeOnSpecialCharacters)
-                    value = AddEscapeOnSpecialCharactersInText(stg);
-                else if (!ThisTextIsValid(out char error, stg))
-                    throw ALFException.InvalidText(error);
-            } else if (value is char cr) {
-                if (memory.AddEscapeOnSpecialCharacters)
-                    value = AddEscapeOnSpecialCharactersInText(cr);
-                else if (!ThisTextIsValid(out char error, cr))
-                    throw ALFException.InvalidText(error);
-            } else if (value is DateTime date) {
-                value = AddEscapeOnSpecialCharactersInText(date.ToString());
-            }
-            root.text.Append(value);
-        }
+            if (value is char[] chars)
+                value = new string(chars);
 
-        protected override void InternalWriteText(char[] value) {
             if (memory.AddEscapeOnSpecialCharacters)
-                value = AddEscapeOnSpecialCharactersInText(value).ToCharArray();
-            else if (!ThisTextIsValid(out char error, value))
-                throw ALFException.InvalidText(error);
+                value = AddEscapeOnSpecialCharactersInText(value.ToString());
+            else if (!ALFUtility.TheTextIsValid(value.ToString()))
+                throw ALFException.GetALFException(1011);
+
             root.text.Append(value);
         }
 
-        protected override string AddEscapeOnSpecialCharactersInText(string value)
-            => value.Replace("\\", "\\\\").Replace(":", "\\:").Replace("[", "\\[")
-                    .Replace("]", "\\]").Replace("<", "\\<").Replace(">", "\\>");
+        //protected override void InternalWriteText(char[] value) {
+        //    if (memory.AddEscapeOnSpecialCharacters)
+        //        value = AddEscapeOnSpecialCharactersInText(value).ToCharArray();
+        //    else if (!ThisTextIsValid(out char error, value))
+        //        throw ALFException.InvalidText(error);
+        //    root.text.Append(value);
+        //}
+
+        protected override string AddEscapeOnSpecialCharactersInText(string value) {
+            using (CharacterCursor cursor = new CharacterCursor(value.ToCharArray()))
+                while (cursor.MoveToCharacter()) {
+                    if (cursor.CharIsEqualToIndex(ALFUtility.EscapesString)) {
+                        cursor.MoveToCharacter(1L);
+                    } else if (cursor.CharIsEqualToIndex(ALFUtility.InvalidTextCharacters)) {
+                        cursor.AddEscape('\\');
+                        cursor.MoveToCharacter(1L);
+                    }
+                }
+            return value;
+        }
 
         protected string AddEscapeOnSpecialCharactersInText(params char[] value)
             => AddEscapeOnSpecialCharactersInText(new string(value));

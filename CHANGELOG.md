@@ -1,4 +1,19 @@
 # Changelog
+## [1.0.3] - 30/01/2023
+### Added
+- Formato '1.5' ALFBT
+- A estrutura de leitura 'ALF' foi adicionada.
+- Um nova estrutura de bancode tradução foi adicionada.
+### Changed
+- As estruturas de leitura 'ALFBT' agora são abstratas.
+### Deprecated
+- Formato '1.0' ALFBT.
+- A estrutura de bancode tradução `TranslationManagement` foi substituida por `LanguageManager`.
+#### deprecated functions
+- `ALFBTWriter.WriterTextFlag(string, string);`
+- `ALFBTWriter.WriterMarkingFlag(string, string);`</br>
+Use a função `ALFBTWriter.WriteElement(string, string)` para escrever uma nova bamdeira.
+
 ## [1.0.1] - 15/01/2023
 ### Add
 - `class PrintOut`

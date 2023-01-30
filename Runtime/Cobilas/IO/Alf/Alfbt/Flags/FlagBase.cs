@@ -4,9 +4,10 @@ using Cobilas.IO.Alf.Alfbt.Components;
 namespace Cobilas.IO.Alf.Alfbt.Flags {
     /// <summary>O corpo base da bandeira.</summary>
     public class FlagBase : ICloneable {
-        private string name;
-        private string value;
-        private AlfbtFlags flags;
+        private readonly string name;
+        private readonly string value;
+        private readonly AlfbtFlags flags;
+
         public string Name => name;
         public string Value => value;
         /// <summary>O tipo da bandeira.</summary>

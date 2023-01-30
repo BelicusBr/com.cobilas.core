@@ -52,35 +52,8 @@ namespace Cobilas.IO.Alf {
         public static ALFRead Create(Stream stream)
             => Create(stream, ALFMemoryReadSettings.DefaultSettings);
 
-        public static bool ValidCharacter(char carac) {
-            switch (carac) {
-                case '\\':
-                case '/':
-                case '_':
-                case '.': return true;
-                default: return char.IsLetterOrDigit(carac);
-            }
-        }
-
-        public static bool IsWhiteSpace(char c) {
-            if (char.IsWhiteSpace(c))
-                return true;
-            return char.IsControl(c);
-        }
-
         protected static void GetAlfFlag(ALFItem root, CharacterCursor cursor)
             => GetAlfFlag(root, cursor, false);
-
-        internal static bool ValidTextCharacter(char carac) {
-            switch (carac) {
-                case ':':
-                case '[':
-                case ']':
-                case '<':
-                case '>': return false;
-                default: return true;
-            }
-        }
 
         private static void GetAlfFlag(ALFItem root, CharacterCursor cursor, bool isSubFlag) {
             ALFItem subflag;
@@ -90,7 +63,7 @@ namespace Cobilas.IO.Alf {
                     num1 = cursor.Cursor;
                     cursor.MoveToCharacter(1L);
                     if (!GetComment(root, cursor))
-                        throw ALFException.CommentNotFinalized(num1);
+                        throw ALFException.GetALFException(1003, num1);
                     cursor.MoveToCharacter(1L);
                     continue;
                 } else if (cursor.CharIsEqualToIndex('[')) {
@@ -99,7 +72,7 @@ namespace Cobilas.IO.Alf {
                     num1 = cursor.Cursor;
 
                     if (!GetFlagName(subflag, cursor))
-                        throw ALFException.UnfinishedName(num1);
+                        throw ALFException.GetALFException(1008, num1);
                     if (cursor.CharIsEqualToIndex(":>")) {
                         cursor.MoveToCharacter(1L);
                         GetAlfFlag(subflag, cursor, true);
@@ -120,8 +93,8 @@ namespace Cobilas.IO.Alf {
                     continue;
                 }
 
-                if (!IsWhiteSpace(cursor.CurrentCharacter))
-                    throw ALFException.SymbolNotIdentified(cursor.Cursor, cursor.CurrentCharacter);
+                if (!ALFUtility.IsWhiteSpace(cursor.CurrentCharacter))
+                    throw ALFException.GetALFException(1005, cursor.Cursor, cursor.CurrentCharacter);
             }
         }
 
@@ -152,12 +125,12 @@ namespace Cobilas.IO.Alf {
                         breakLine = false;
                         continue;
                     }
-                    if (!IsWhiteSpace(cursor.CurrentCharacter) || !char.IsControl(cursor.CurrentCharacter))
-                        throw ALFException.SymbolNotIdentifiedInTextFlag(cursor.Cursor, cursor.CurrentCharacter);
+                    if (!ALFUtility.IsWhiteSpace(cursor.CurrentCharacter) || !char.IsControl(cursor.CurrentCharacter))
+                        throw ALFException.GetALFException(1015, cursor.Cursor, cursor.CurrentCharacter);
                     continue;
                 }
 
-                if (cursor.CharIsEqualToIndex("\\\\", "\\:", "\\[", "\\]", "\\<", "\\>")) {
+                if (cursor.CharIsEqualToIndex(ALFUtility.EscapesString)) {
                     item.text.Append(cursor.CurrentCharacter);
                     cursor.MoveToCharacter(1L);
                     item.text.Append(cursor.CurrentCharacter);
@@ -166,8 +139,8 @@ namespace Cobilas.IO.Alf {
                   cursor.CharIsEqualToIndex(']'))
                     return true;
 
-                if (!ValidTextCharacter(cursor[cursor.Index]))
-                    throw ALFException.SymbolNotIdentified(cursor.Cursor, cursor.CurrentCharacter);
+                if (!ALFUtility.ValidTextCharacter(cursor[cursor.Index]))
+                    throw ALFException.GetALFException(1005, cursor.Cursor, cursor.CurrentCharacter);
                 item.text.Append(cursor[cursor.Index]);
             }
             return false;
@@ -181,11 +154,11 @@ namespace Cobilas.IO.Alf {
                     cursor.CharIsEqualToIndex(':')) {
                     item.name = builder.ToString();
                     if (string.IsNullOrEmpty(item.name))
-                        throw ALFException.BlankName(column);
+                        throw ALFException.GetALFException(1002, column);
                     return true;
                 }
-                if (!ValidCharacter(cursor[cursor.Index]))
-                    throw ALFException.SymbolNotIdentifiedInTextFlag(cursor.Cursor, cursor.CurrentCharacter);
+                if (!ALFUtility.ValidNameCharacter(cursor[cursor.Index]))
+                    throw ALFException.GetALFException(1016, cursor.Cursor, cursor.CurrentCharacter);
                 builder.Append(cursor[cursor.Index]);
             }
             return false;

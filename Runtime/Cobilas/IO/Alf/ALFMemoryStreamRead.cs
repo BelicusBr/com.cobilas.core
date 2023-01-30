@@ -21,7 +21,7 @@ namespace Cobilas.IO.Alf {
 
         public override void Dispose() {
             if (disposedValue)
-                throw ALFException.GetObjectDisposedException<ALFMemoryStreamRead>();
+                throw ALFException.GetALFException(1000, GetType());
             disposedValue = true;
             root.Dispose();
             memory.Dispose();
@@ -43,7 +43,7 @@ namespace Cobilas.IO.Alf {
 
         protected override void RemoveEscapeOnSpecialCharactersInALFItem(ALFItem root) {
             foreach (ALFItem item in root) {
-                if (item.name == ALFWriter.n_Comment) continue;
+                if (item.name == ALFUtility.n_Comment) continue;
                 _ = item.text.Replace("\\\\", "\\").Replace("\\:", ":").Replace("\\[", "[")
                     .Replace("\\]", "]").Replace("\\<", "<").Replace("\\>", ">");
                 RemoveEscapeOnSpecialCharactersInALFItem(item);

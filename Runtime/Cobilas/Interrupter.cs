@@ -3,9 +3,9 @@
 namespace Cobilas {
     [System.Serializable]
     public struct Interrupter {
-        private bool[] _switches;
         private int currentIndex;
         private bool useASwitch;
+        private readonly bool[] _switches;
 
         public int CurrentIndex => currentIndex;
         ///<summary>Esta propriedade permite a troca de unico interruptor para mult interruptores e vise versa.</summary>

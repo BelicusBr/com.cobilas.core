@@ -6,7 +6,7 @@ using System.Collections.Generic;
 namespace Cobilas.Threading.Tasks {
     public static class TaskPool {
         private static event Func<TaskPoolItem> GetTask;
-        private static List<TaskPoolItem> tasks = new List<TaskPoolItem>();
+        private static readonly List<TaskPoolItem> tasks = new List<TaskPoolItem>();
 
         /// <summary>Numero de <seealso cref="Task"/> abertas.</summary>
         public static int PoolCount => tasks.Count;

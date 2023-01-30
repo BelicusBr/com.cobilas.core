@@ -14,19 +14,14 @@ namespace System.Xml {
                 W.WriteWhitespace(GenerateTabulation(layer));
             }
             W.WriteStartElement(tag.Name);
-            Action<ElementAttribute> EA_action = 
-                (EA) => { W.WriteAttributeString(EA.Name, EA.Value.ValueToString); };
-            tag.ForEach(EA_action);
+            tag.ForEach((EA) => { W.WriteAttributeString(EA.Name, EA.Value.ValueToString); });
 
             bool ContainsElements = tag.TagElementCount > 0;
 
             if (!tag.ValueIsEmpty)
                 W.WriteValue(tag.ValueOBJ);
 
-            Action<ElementTag> ET_action =
-                (ET) => { MountElementTagEngraving(W, ET, layer + 1); };
-
-            tag.ForEach(ET_action);
+            tag.ForEach((ET) => { MountElementTagEngraving(W, ET, layer + 1); });
 
             if (W.Settings.Indent && ContainsElements) { 
                 W.WriteWhitespace(W.Settings.IndentChars);

@@ -6,13 +6,6 @@ using Cobilas.IO.Alf.Components;
 
 namespace Cobilas.IO.Alf {
     public abstract class ALFWriter : IDisposable {
-        public const string n_Type = "type";
-        public const string alf_Type = ".alf";
-        public const string alf_Version = "1.0";
-        public const string n_Version = "version";
-        public const string n_Comment = "comment";
-        public const string n_Encoding = "encoding";
-        public const string n_BreakLine = "breakline";
         public abstract ALFWriterSettings Settings { get; }
 
         public abstract void StartElement(string name);
@@ -42,7 +35,6 @@ namespace Cobilas.IO.Alf {
         public abstract void Flush();
         public abstract void Dispose();
         protected abstract void InternalWriteText(object value);
-        protected abstract void InternalWriteText(char[] value);
         protected abstract string AddEscapeOnSpecialCharactersInText(string value);
 
         public static ALFWriter Create(TextWriter writer, ALFWriterSettings settings) {
@@ -69,34 +61,28 @@ namespace Cobilas.IO.Alf {
         public static ALFWriter Create(Stream stream)
             => Create(stream, ALFMemoryWriterSetting.DefaultSettings);
 
-        public static bool ThisNameIsValid(string name)
-            => ThisNameIsValid(name, ALFRead.ValidCharacter);
-
-        public static bool ThisNameIsValid(string name, Func<char, bool> func)
-            => name.All(func);
-
         protected static void WriteFlag(ALFItem root, int depth, StringBuilder builder, bool indent) {
             foreach (ALFItem item in root)
                 switch (item.name) {
-                    case n_Comment:
-                        builder.AppendFormat("{0}[*{1}", GetTabs(depth, indent), item.text.ToString());
-                        builder.AppendFormat("{0}*]{1}", GetTabs(depth, indent), indent ? "\r\n" : string.Empty);
+                    case ALFUtility.n_Comment:
+                        builder.AppendFormat("{0}[*{1}", ALFUtility.GetTabs(depth, indent), item.text.ToString());
+                        builder.AppendFormat("{0}*]{1}", ALFUtility.GetTabs(depth, indent), indent ? "\r\n" : string.Empty);
                         break;
-                    case n_BreakLine:
+                    case ALFUtility.n_BreakLine:
                         if (!indent) break;
                         builder.Append(item.text.ToString());
                         break;
                     default:
-                        builder.AppendFormat("{0}[{1}", GetTabs(depth, indent), item.name);
+                        builder.AppendFormat("{0}[{1}", ALFUtility.GetTabs(depth, indent), item.name);
                         WriteFlagText(item, depth + 1, builder, indent);
                         if (item.Count != 0) {
                             builder.AppendFormat(":>{0}", indent ? "\r\n" : string.Empty);
                             WriteFlag(item, depth + 1, builder, indent);
-                            builder.AppendFormat("{0}<]{1}", GetTabs(depth, indent), indent ? "\r\n" : string.Empty);
+                            builder.AppendFormat("{0}<]{1}", ALFUtility.GetTabs(depth, indent), indent ? "\r\n" : string.Empty);
                         } else {
                             if (item.text.ToString().Contains('\n')) {
                                 builder.AppendFormat(":>", indent ? "\r\n" : string.Empty);
-                                builder.AppendFormat("{0}<]{1}", GetTabs(depth, indent), indent ? "\r\n" : string.Empty);
+                                builder.AppendFormat("{0}<]{1}", ALFUtility.GetTabs(depth, indent), indent ? "\r\n" : string.Empty);
                             }
                             else builder.AppendFormat("]{0}", indent ? "\r\n" : string.Empty);
                         }
@@ -108,9 +94,9 @@ namespace Cobilas.IO.Alf {
             error = char.MinValue;
             using (CharacterCursor cursor = new CharacterCursor(text))
                 while (cursor.MoveToCharacter()) {
-                    if (cursor.CharIsEqualToIndex("\\\\", "\\:", "\\[", "\\]", "\\<", "\\>"))
+                    if (cursor.CharIsEqualToIndex(ALFUtility.EscapesString))
                         cursor.MoveToCharacter(1L);
-                    else if (cursor.CharIsEqualToIndex('\\', ':', '[', ']', '<', '>')) {
+                    else if (cursor.CharIsEqualToIndex(ALFUtility.InvalidTextCharacters)) {
                         error = cursor.CurrentCharacter;
                         return false;
                     }
@@ -121,13 +107,10 @@ namespace Cobilas.IO.Alf {
         internal static bool ThisTextIsValid(out char error, string text)
             => ThisTextIsValid(out error, text.ToCharArray());
 
-        private static string GetTabs(int depth, bool indent)
-            => indent ? string.Empty.PadRight(depth, '\t') : string.Empty;
-
         private static void WriteFlagText(ALFItem root, int depth, StringBuilder builder, bool indent) {
             string txt = root.text.ToString();
             if (!string.IsNullOrEmpty(txt)) {
-                txt = txt.Replace("\n", string.Format("\n{0}:", GetTabs(depth, indent)));
+                txt = txt.Replace("\n", string.Format("\n{0}:", ALFUtility.GetTabs(depth, indent)));
                 builder.AppendFormat(":{0}", txt);
             }
         }

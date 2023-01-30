@@ -2,7 +2,7 @@
 
 namespace Cobilas.Numeric {
     public class CalcSign : BaseCalcItem {
-        private string value;
+        private readonly string value;
         public override string Item => value;
 
         public CalcSign(string sign) {

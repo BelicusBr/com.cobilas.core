@@ -47,7 +47,7 @@ namespace System.Xml {
         protected virtual void Dispose(bool disposing) {
             if (!disposedValue) {
                 if (disposing)
-                    value = default(object);
+                    value = default;
                 disposedValue = true;
             }
         }

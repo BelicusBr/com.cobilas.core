@@ -5,14 +5,16 @@ using System.Collections.Generic;
 
 namespace Cobilas.IO.Alf.Components.Collections {
     public sealed class ALFItemReadOnly : IItemReadOnly {
+        private bool disposedValue;
         private readonly ALFItem root;
-        private ALFItemReadOnly parent;
+        private readonly ALFItemReadOnly parent;
 
         public int Count => root.Count;
         public string Name => root.name;
         public bool IsRoot => root.isRoot;
         public IItemReadOnly Parent => parent;
         public string Text => root.text.ToString();
+        public IItemReadOnly this[string name] => this[IndexOf(name)];
         public IItemReadOnly this[int index] => new ALFItemReadOnly(root[index], this);
         object IReadOnlyArray.this[int index] => new ALFItemReadOnly(root[index], this);
 
@@ -23,14 +25,32 @@ namespace Cobilas.IO.Alf.Components.Collections {
 
         public ALFItemReadOnly(ALFItem root) : this(root, (ALFItemReadOnly)null) { }
 
+        ~ALFItemReadOnly()
+            => Dispose(disposing: false);
+
         public object Clone()
             => new ALFItemReadOnly(root == null ? null : (ALFItem)root.Clone());
+
+        public bool Contains(string name)
+            => IndexOf(name) >= 0;
+
+        public int IndexOf(string name) {
+            for (int I = 0; I < Count; I++)
+                if (name == root[I].name)
+                    return I;
+            return -1;
+        }
+
+        public void Dispose() {
+            Dispose(disposing: true);
+            GC.SuppressFinalize(this);
+        }
 
         public IEnumerator<IItemReadOnly> GetEnumerator()
             => new ItemReadOnlyEnumerator(this);
 
         public override string ToString()
-            => root.text.ToString();
+            => root.ToString();
 
         public TypeCode GetTypeCode()
             => TypeCode.String;
@@ -86,95 +106,13 @@ namespace Cobilas.IO.Alf.Components.Collections {
         object IConvertible.ToType(Type conversionType, IFormatProvider provider)
             => (root as IConvertible).ToType(conversionType, provider);
 
-        /*
-        public string Name => root.name;
-        public bool IsRoot => root.isRoot;
-        public ALFItemReadOnly Parent => parent;
-        public int Count => ArrayManipulation.ArrayLength(root.itens);
+        private void Dispose(bool disposing) {
+            if (!disposedValue) {
+                if (disposing)
+                    root.Dispose();
 
-        public ALFItemReadOnly this[string name] => this[IndexOf(name)];
-        public ALFItemReadOnly this[int index] => GetALFItemReadOnly(root.itens[index]);
-
-        object IReadOnlyArray.this[int index] => GetALFItemReadOnly(root.itens[index]);
-
-        public ALFItemReadOnly(ALFItem root)
-            => this.root = root;
-
-        private ALFItemReadOnly GetALFItemReadOnly(ALFItem root) {
-            ALFItemReadOnly readOnly = new ALFItemReadOnly(root);
-            readOnly.parent = this;
-            return readOnly;
+                disposedValue = true;
+            }
         }
-
-        public int IndexOf(string name) {
-            for (int I = 0; I < Count; I++)
-                if (root.itens[I].name == name)
-                    return I;
-            return -1;
-        }
-
-        public TypeCode GetTypeCode() 
-            => TypeCode.String;
-
-        public IEnumerator<ALFItemReadOnly> GetEnumerator()
-            => new ALFItemReadOnlyEnumerator(this);
-
-        public override string ToString()
-            => root.text.ToString();
-
-        public string ToString(IFormatProvider provider)
-            => ToString().ToString(provider);
-
-        public object Clone()
-            => new ALFItemReadOnly(this.root == (ALFItem)null ? (ALFItem)null : (ALFItem)this.root.Clone());
-
-        bool IConvertible.ToBoolean(IFormatProvider provider)
-            => (ToString() as IConvertible).ToBoolean(provider);
-
-        char IConvertible.ToChar(IFormatProvider provider)
-            => (ToString() as IConvertible).ToChar(provider);
-
-        sbyte IConvertible.ToSByte(IFormatProvider provider)
-            => (ToString() as IConvertible).ToSByte(provider);
-
-        byte IConvertible.ToByte(IFormatProvider provider)
-            => (ToString() as IConvertible).ToByte(provider);
-
-        short IConvertible.ToInt16(IFormatProvider provider)
-            => (ToString() as IConvertible).ToByte(provider);
-
-        ushort IConvertible.ToUInt16(IFormatProvider provider)
-            => (ToString() as IConvertible).ToUInt16(provider);
-
-        int IConvertible.ToInt32(IFormatProvider provider)
-            => (ToString() as IConvertible).ToInt32(provider);
-
-        uint IConvertible.ToUInt32(IFormatProvider provider)
-            => (ToString() as IConvertible).ToUInt32(provider);
-
-        long IConvertible.ToInt64(IFormatProvider provider)
-            => (ToString() as IConvertible).ToInt64(provider);
-
-        ulong IConvertible.ToUInt64(IFormatProvider provider)
-            => (ToString() as IConvertible).ToUInt64(provider);
-
-        public float ToSingle(IFormatProvider provider)
-            => (ToString() as IConvertible).ToSingle(provider);
-
-        double IConvertible.ToDouble(IFormatProvider provider)
-            => (ToString() as IConvertible).ToDouble(provider);
-
-        decimal IConvertible.ToDecimal(IFormatProvider provider)
-            => (ToString() as IConvertible).ToDecimal(provider);
-
-        DateTime IConvertible.ToDateTime(IFormatProvider provider) 
-            => (ToString() as IConvertible).ToDateTime(provider);
-
-        object IConvertible.ToType(Type conversionType, IFormatProvider provider)
-            => (ToString() as IConvertible).ToType(conversionType, provider);
-
-        IEnumerator IEnumerable.GetEnumerator()
-            => new ALFItemReadOnlyEnumerator(this);
-        */
     }
 }

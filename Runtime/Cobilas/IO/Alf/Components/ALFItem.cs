@@ -14,7 +14,7 @@ namespace Cobilas.IO.Alf.Components {
 
         public int Count => ArrayManipulation.ArrayLength(itens);
         public static ALFItem Empty => new ALFItem(string.Empty);
-        public static ALFItem DefaultComment => new ALFItem(ALFWriter.n_Comment);
+        public static ALFItem DefaultComment => new ALFItem(ALFUtility.n_Comment);
         public static ALFItem DefaultRoot => new ALFItem("Root", string.Empty, true);
 
         public ALFItem this[int index] => itens[index];

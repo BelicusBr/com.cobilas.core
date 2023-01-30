@@ -8,21 +8,35 @@ using Cobilas.IO.Alf.Components.Collections;
 
 namespace Cobilas.IO.Alf.Alfbt.Components.Collections {
     public sealed class ALFBTFlagReadOnly : FlagBase, IItemReadOnly {
-        private ALFItemReadOnly readOnly;
+        private readonly ALFItemReadOnly readOnly;
 
         public int Count => readOnly.Count;
         public string Text => ((IItemReadOnly)readOnly).Text;
         public bool IsRoot => ((IItemReadOnly)readOnly).IsRoot;
-        public IItemReadOnly Parent => ((IItemReadOnly)readOnly).Parent;
+        public IItemReadOnly this[string name] => ((IItemReadOnly)readOnly)[name];
+
+        IItemReadOnly IItemReadOnly.Parent => (IItemReadOnly)null;
         object IReadOnlyArray.this[int index] => new ALFBTFlagReadOnly(readOnly[index] as ALFItemReadOnly);
         IItemReadOnly IReadOnlyArray<IItemReadOnly>.this[int index] => new ALFBTFlagReadOnly(readOnly[index] as ALFItemReadOnly);
 
-        public ALFBTFlagReadOnly(ALFItemReadOnly readOnly):base(readOnly.Name, readOnly.ToString(), AlfbtFlags.MarkingFlag)
+        public ALFBTFlagReadOnly(ALFItemReadOnly readOnly): base(readOnly.Name, readOnly.ToString(), AlfbtFlags.MarkingFlag)
         {
             this.readOnly = readOnly;
         }
 
         public ALFBTFlagReadOnly(ALFItem readOnly) : this(new ALFItemReadOnly(readOnly)) { }
+
+        public new object Clone()
+            => new ALFBTFlagReadOnly(readOnly == null ? null : (ALFItemReadOnly)readOnly.Clone());
+
+        public void Dispose()
+            => ((IDisposable)readOnly).Dispose();
+
+        public int IndexOf(string name)
+            => ((IItemReadOnly)readOnly).IndexOf(name);
+
+        public bool Contains(string name)
+            => ((IItemReadOnly)readOnly).Contains(name);
 
         public IEnumerator<IItemReadOnly> GetEnumerator()
             => new ALFBTFlagReadOnlyEnumerator(this);

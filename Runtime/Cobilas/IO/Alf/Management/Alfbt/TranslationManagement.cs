@@ -3,13 +3,15 @@ using System.Linq;
 using System.Text;
 using Cobilas.Collections;
 using Cobilas.IO.Alf.Alfbt;
-using Cobilas.IO.Alf.Alfbt;
 using Cobilas.IO.Alf.Alfbt.Flags;
 
 //Language block >> Bloco de idioma
 //Language text  >> Texto de idioma
-namespace Cobilas.IO.Alf.Management.Alfbt {
-    public sealed class TranslationManagement : IDisposable {
+namespace Cobilas.IO.Alf.Management.Alfbt
+{
+    [Obsolete("Use Cobilas.IO.Alf.Alfbt.Language.LanguageManager")]
+    public sealed class TranslationManagement : IDisposable
+    {
         /// <summary>O separador atual por padrão é '.'</summary>
         public char CurrentSeparator;
         private TranslationCollection[] tlt_list;
@@ -21,27 +23,32 @@ namespace Cobilas.IO.Alf.Management.Alfbt {
         public const string MarkingFlagDisplayName = "display_name";
         public int LanguageCount => ArrayManipulation.ArrayLength(tlt_list);
 
-        public TranslationManagement() {
+        public TranslationManagement()
+        {
             CurrentSeparator = DefaultSeparator;
         }
 
         /// <summary>Obtem uma lista de idiomas registrado no <see cref="TranslationManagement"/>.</summary>
-        public LanguageInfo[] GetListOfLanguages() {
+        public LanguageInfo[] GetListOfLanguages()
+        {
             LanguageInfo[] res = new LanguageInfo[LanguageCount];
             for (int I = 0; I < LanguageCount; I++)
                 res[I] = new LanguageInfo(tlt_list[I].Language, tlt_list[I].DisplayName);
             return res;
         }
 
-        public TranslationCollection GetTranslation(string language) => (TranslationCollection)null;
+        public TranslationCollection GetTranslation(string language) => tlt_list[I_IndexOff(language)];
 
+        [Obsolete("Use LanguageText:GetLanguageText(string)")]
         public TextFlag GetTextFlag(string path) => new TextFlag();
 
+        [Obsolete("Use LanguageText:GetLanguageText(string)")]
         public MarkingFlag GetMarkingFlag(string path) => new MarkingFlag();
 
         /// <summary>Obtem um texto de idioma.</summary>
         /// <param name="path">Caminho alvo. ({language}.{block}.{name})</param>
-        public LanguageText GetLanguageText(string path) {
+        public LanguageText GetLanguageText(string path)
+        {
             string lang = path.Remove(path.IndexOf('.'));
             string block = path.Remove(0, path.IndexOf('.') + 1);
             block = block.Remove(block.LastIndexOf('.'));
@@ -54,9 +61,11 @@ namespace Cobilas.IO.Alf.Management.Alfbt {
             => LoadTranslation(read, out _);
 
         /// <summary>Carrega a tradução apartir de um arquivo .alfbt</summary>
-        public bool LoadTranslation(ALFBTRead read, out Exception exception) {
+        public bool LoadTranslation(ALFBTRead read, out Exception exception)
+        {
             exception = (Exception)null;
-            try {
+            try
+            {
                 if (!read.MarkingFlagExists(MarkingFlagLanguage)) return false;
                 string lang = read.GetMarkingFlag(MarkingFlagLanguage).Value;
                 string displayName = read.MarkingFlagExists(MarkingFlagDisplayName) ? read.GetMarkingFlag(MarkingFlagDisplayName).Value : lang;
@@ -64,7 +73,7 @@ namespace Cobilas.IO.Alf.Management.Alfbt {
 
                 int indexLang = I_IndexOff(lang);
                 TranslationCollection temp = (TranslationCollection)null;
-                if (indexLang < 0) 
+                if (indexLang < 0)
                     ArrayManipulation.Add(temp = new TranslationCollection(lang, displayName), ref tlt_list);
 
                 object[] flags = new object[0];
@@ -72,33 +81,44 @@ namespace Cobilas.IO.Alf.Management.Alfbt {
                 ArrayManipulation.Add(FlagListToObjectArray(read.GetAllMarkingFlags()), ref flags);
                 ArrayManipulation.Add(FlagListToObjectArray(read.GetAllTextFlags()), ref flags);
 
-                if (!string.IsNullOrEmpty(gui_target)) {
+                if (!string.IsNullOrEmpty(gui_target))
+                {
                     if (!temp.Contanis(gui_target))
                         temp.AddBlock(gui_target);
 
-                    foreach (object item in flags) {
+                    foreach (object item in flags)
+                    {
                         if (item is MarkingFlag mkf)
                             if (mkf.Name != MarkingFlagLanguage &&
-                                mkf.Name != MarkingFlagDisplayName && mkf.Name != MarkingFlagGUITarget) {
+                                mkf.Name != MarkingFlagDisplayName && mkf.Name != MarkingFlagGUITarget)
+                            {
                                 MarkingFlag m_temp = (MarkingFlag)mkf.Clone();
                                 temp.AddText(gui_target, new LanguageText(m_temp.Name, m_temp.Value));
                             }
-                        if (item is TextFlag ttf) {
+                        if (item is TextFlag ttf)
+                        {
                             TextFlag t_temp = (TextFlag)ttf.Clone();
                             temp.AddText(gui_target, new LanguageText(t_temp.Name, t_temp.Value));
                         }
                     }
-                } else {
-                    foreach (object item in flags) {
+                }
+                else
+                {
+                    foreach (object item in flags)
+                    {
                         string nameTemp = (string)null;
                         if (item is MarkingFlag mkf)
-                            if (mkf.Name != MarkingFlagLanguage && 
-                                mkf.Name != MarkingFlagDisplayName && mkf.Name != MarkingFlagGUITarget) {
+                            if (mkf.Name != MarkingFlagLanguage &&
+                                mkf.Name != MarkingFlagDisplayName && mkf.Name != MarkingFlagGUITarget)
+                            {
                                 MarkingFlag m_temp = (MarkingFlag)mkf.Clone();
-                                if (m_temp.Name.Contains(CurrentSeparator)) {
+                                if (m_temp.Name.Contains(CurrentSeparator))
+                                {
                                     gui_target = m_temp.Name.Remove(m_temp.Name.LastIndexOf('.'));
                                     nameTemp = m_temp.Name.Remove(0, m_temp.Name.LastIndexOf('.') + 1);
-                                } else {
+                                }
+                                else
+                                {
                                     nameTemp = m_temp.Name;
                                     gui_target = GenericGUITarget;
                                 }
@@ -108,12 +128,16 @@ namespace Cobilas.IO.Alf.Management.Alfbt {
 
                                 temp.AddText(gui_target, new LanguageText(nameTemp, m_temp.Value));
                             }
-                        if (item is TextFlag ttf) {
+                        if (item is TextFlag ttf)
+                        {
                             TextFlag t_temp = (TextFlag)ttf.Clone();
-                            if (t_temp.Name.Contains(CurrentSeparator)) {
+                            if (t_temp.Name.Contains(CurrentSeparator))
+                            {
                                 gui_target = t_temp.Name.Remove(t_temp.Name.LastIndexOf('.'));
                                 nameTemp = t_temp.Name.Remove(0, t_temp.Name.LastIndexOf('.') + 1);
-                            } else {
+                            }
+                            else
+                            {
                                 nameTemp = t_temp.Name;
                                 gui_target = GenericGUITarget;
                             }
@@ -125,14 +149,17 @@ namespace Cobilas.IO.Alf.Management.Alfbt {
                         }
                     }
                 }
-            } catch (Exception e) {
+            }
+            catch (Exception e)
+            {
                 exception = e;
                 return false;
             }
             return true;
         }
 
-        public override string ToString() {
+        public override string ToString()
+        {
             StringBuilder builder = new StringBuilder();
             builder.AppendFormat("- TranslationDataManager\n");
             for (int I = 0; I < LanguageCount; I++)
@@ -140,28 +167,32 @@ namespace Cobilas.IO.Alf.Management.Alfbt {
             return builder.ToString();
         }
 
-        public void Dispose() {
+        public void Dispose()
+        {
             for (int I = 0; I < LanguageCount; I++)
                 tlt_list[I].Dispose();
 
             ArrayManipulation.ClearArraySafe(ref tlt_list);
         }
 
-        private object[] FlagListToObjectArray(TextFlag[] flags) {
+        private object[] FlagListToObjectArray(TextFlag[] flags)
+        {
             object[] res = new object[ArrayManipulation.ArrayLength(flags)];
             for (int I = 0; I < res.Length; I++)
                 res[I] = flags[I];
             return res;
         }
 
-        private object[] FlagListToObjectArray(MarkingFlag[] flags) {
+        private object[] FlagListToObjectArray(MarkingFlag[] flags)
+        {
             object[] res = new object[ArrayManipulation.ArrayLength(flags)];
             for (int I = 0; I < res.Length; I++)
                 res[I] = flags[I];
             return res;
         }
 
-        private int I_IndexOff(string lang) {
+        private int I_IndexOff(string lang)
+        {
             for (int I = 0; I < LanguageCount; I++)
                 if (tlt_list[I].Language == lang)
                     return I;

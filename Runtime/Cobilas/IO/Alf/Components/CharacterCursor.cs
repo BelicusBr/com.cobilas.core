@@ -25,6 +25,12 @@ namespace Cobilas.IO.Alf.Components {
             column = 0L;
         }
 
+        public CharacterCursor(string text) :
+            this(text.ToCharArray()) { }
+
+        public CharacterCursor(StringBuilder text) :
+            this(text.ToString()) { }
+
         public CharacterCursor(byte[] bytes, Encoding encoding) :
             this(encoding.GetChars(bytes)) { }
 
@@ -36,6 +42,21 @@ namespace Cobilas.IO.Alf.Components {
                 column = 0L;
             }
             return res;
+        }
+
+        public void AddEscape(char escape) {
+            char[] newCharacters = new char[Count + 1];
+            for (long I = 0; I < characters.LongLength; I++) {
+                if (I == index) {
+                    newCharacters[I] = escape;
+                    newCharacters[I + 1L] = characters[I];
+                } else if (I > index)
+                    newCharacters[I + 1L] = characters[I];
+                else
+                    newCharacters[I] = characters[I];
+            }
+            characters = null;
+            characters = newCharacters;
         }
 
         public bool MoveToCharacter()
