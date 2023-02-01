@@ -311,19 +311,19 @@ namespace Cobilas.IO.Alf.Alfbt {
                 if (determined) {
                     if (cursor.CharIsEqualToIndex(":/*"))
                         return ALFBTVersion.alfbt_1_5;
-                    else if (cursor.CharIsEqualToIndex("#$ "))
+                    else if (cursor.CharIsEqualToIndex('='))
                         return ALFBTVersion.alfbt_1_0;
                     continue;
                 }
-                if (cursor.CharIsEqualToIndex("#$ ") ||
-                    cursor.CharIsEqualToIndex("#? ") ||
-                    cursor.CharIsEqualToIndex("#* "))
+                if (cursor.CharIsEqualToIndex("#$") ||
+                    cursor.CharIsEqualToIndex("#?") ||
+                    cursor.CharIsEqualToIndex("#*"))
                     return ALFBTVersion.alfbt_1_0;
 
-                if (cursor.CharIsEqualToIndex("#> "))
+                if (cursor.CharIsEqualToIndex("#>"))
                     return ALFBTVersion.alfbt_1_5;
 
-                if (cursor.CharIsEqualToIndex("#! "))
+                if (cursor.CharIsEqualToIndex("#!"))
                     determined = true;
             }
             return ALFBTVersion.UnknownVersion;

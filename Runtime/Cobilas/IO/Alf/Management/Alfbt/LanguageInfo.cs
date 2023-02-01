@@ -8,7 +8,7 @@ namespace Cobilas.IO.Alf.Management.Alfbt {
         public string Language => lang;
         public string Display_Name => display_lang;
 
-        internal LanguageInfo(string lang, string display_lang) {
+        public LanguageInfo(string lang, string display_lang) {
             this.lang = lang;
             this.display_lang = display_lang;
         }

@@ -74,7 +74,7 @@ namespace Cobilas.IO.Alf.Alfbt.Language {
         }
 
         private void Add(LanguageCollection collection) {
-            if (count == collections.Length)
+            if (count == Capacity)
                 Array.Resize(ref collections, count + 1);
             collections[count] = collection;
             ++count;
@@ -84,7 +84,7 @@ namespace Cobilas.IO.Alf.Alfbt.Language {
             if (!disposedValue) {
                 if (disposing) {
                     foreach (var item in collections)
-                        item.Dispose();
+                        item?.Dispose();
                     count = 0;
                     ArrayManipulation.ClearArraySafe(ref collections);
                 }

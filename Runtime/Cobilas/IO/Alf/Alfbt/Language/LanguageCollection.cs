@@ -24,7 +24,7 @@ namespace Cobilas.IO.Alf.Alfbt.Language {
         public string GetLanguageText(string path) {
             int index = language.IndexOf(path);
             if (index < 0) return (string)null;
-            return Convert.ToString(comunaManifest[index]);
+            return Convert.ToString(language[index]);
         }
 
         public void Dispose() {

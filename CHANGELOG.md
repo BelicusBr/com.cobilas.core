@@ -6,6 +6,10 @@
 - Um nova estrutura de bancode tradução foi adicionada.
 ### Changed
 - As estruturas de leitura 'ALFBT' agora são abstratas.
+- Ouve uma pequena alteração na forma de auto detecção da versão do formato alfbt.
+- Agora o construtor `LanguageInfo.LanguageInfo(string, string)` é publico.
+### Fixed
+- Na `string:LanguageCollection.GetLanguageText(string)` o texto resultante agora e obtido do campo `language` em vez de `comunaManifest`.
 ### Deprecated
 - Formato '1.0' ALFBT.
 - A estrutura de bancode tradução `TranslationManagement` foi substituida por `LanguageManager`.
