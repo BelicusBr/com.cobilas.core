@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 
 namespace Cobilas.Collections {
+    //.net35 => 1.2.0
+    //.net5  => 1.1.0
     /// <summary>Classe de manipulação de matriz.</summary>
     public static class ArrayManipulation {
         /// <summary>Insira um item no idice de um <see cref="Array"/>.</summary>
@@ -11,7 +13,13 @@ namespace Cobilas.Collections {
         /// <param name="index">Indice alvo.</param>
         /// <param name="list"><see cref="Array"/> alvo.</param>
         public static T[] Insert<T>(T[] itens, int index, T[] list) {
-            if (list == null) list = new T[0];
+            if (list == null) {
+#if NET5_0_OR_GREATER
+                list = CreateEmptyArray<T>();
+#else
+                list = new T[0];
+#endif
+            }
             T[] newList = new T[list.Length + itens.Length];
             Array.Copy(list, 0, newList, 0, index);
             Array.Copy(itens, 0, newList, index, itens.Length);
@@ -197,6 +205,9 @@ namespace Cobilas.Collections {
         public static void Reverse(Array array)
             => Array.Reverse(array, 0, array.Length);
 
+        public static void Resize<T>(ref T[] array, int newSize)
+            => Array.Resize<T>(ref array, newSize);
+
         /// <summary>Indica se a lista está vazia.</summary>
         public static bool EmpytArray(ICollection array)
             => array == null || array.Count == 0;
@@ -207,5 +218,19 @@ namespace Cobilas.Collections {
 
         public static long ArrayLongLength(Array array)
             => array == null ? 0L : array.LongLength;
+
+        public static bool IsReadOnlySafe(Array array)
+            => array != null && array.IsReadOnly;
+
+        public static bool IsFixedSizeSafe(Array array)
+            => array != null && array.IsFixedSize;
+
+        public static bool IsSynchronizedSafe(ICollection collection)
+            => collection != null && collection.IsSynchronized;
+
+#if NET5_0_OR_GREATER
+        public static T[] CreateEmptyArray<T>()
+            => Array.Empty<T>();
+#endif
     }
 }

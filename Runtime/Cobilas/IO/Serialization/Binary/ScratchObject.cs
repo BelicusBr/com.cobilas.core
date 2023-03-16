@@ -2,7 +2,7 @@
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 
-namespace Cobilas.IO {
+namespace Cobilas.IO.Serialization.Binary {
     /// <summary>Objeto de rascunho base.</summary>
     [Serializable]
     public abstract class ScratchObject {

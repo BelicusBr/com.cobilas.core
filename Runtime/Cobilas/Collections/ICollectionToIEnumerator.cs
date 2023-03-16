@@ -7,10 +7,10 @@ namespace Cobilas.Collections {
         public ICollectionToIEnumerator(ICollection<T> collection) : base()
             => collection.CopyTo(list, 0);
 
-        public override void Dispose() => base.Dispose();
-
         public override bool MoveNext() => base.MoveNext();
 
         public override void Reset() => base.Reset();
+
+        protected override void Dispose(bool disposing) => base.Dispose(disposing);
     }
 }
