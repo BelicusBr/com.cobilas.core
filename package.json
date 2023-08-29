@@ -1,6 +1,6 @@
 {
   "name": "com.cobilas.core",
-  "version": "2.0.0",
+  "version": "2.0.0-ch1",
   "displayName": "Cobilas Core",
   "description": "Pacote de blibiotecas para unity3d",
   "documentationUrl": "https://github.com/BelicusBr/com.cobilas.core.wiki.git",
@@ -9,7 +9,7 @@
   "unity": "2017.1",
   "unityRelease": "0b5",
   "type": "library",
-  "author": "Cobilas CTB",
+  "author": "BélicusBr",
   "repository": {
     "url": "git+https://github.com/BelicusBr/com.cobilas.core.git",
     "type": "git"
@@ -24,8 +24,8 @@
   },
   "keywords": [
     "unity3d",
-    "C#",
-    "CSharp"
+    "unity-csharp",
+	"unitypackage"
   ],
   "license": "MIT"
 }
