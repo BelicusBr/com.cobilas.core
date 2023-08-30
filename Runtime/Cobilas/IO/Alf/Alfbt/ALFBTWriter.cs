@@ -10,11 +10,7 @@ namespace Cobilas.IO.Alf.Alfbt {
         public abstract ALFWriterSettings Settings { get; }
 
         public abstract void WriterHeaderFlag();
-        [Obsolete("Use WriteElement(string, string)")]
-        public abstract void WriterMarkingFlag(string name, string value);
         public abstract void WriterCommentFlag(string text);
-        [Obsolete("Use WriteElement(string, string)")]
-        public abstract void WriterTextFlag(string name, string value);
         public abstract void WriteLineBreak();
         public abstract void WriteLineBreak(int lines);
         public abstract bool Contains(string name);

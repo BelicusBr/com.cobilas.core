@@ -1,4 +1,31 @@
 # Changelog
+## [3.0.0] - 29/08/2023
+### Removed
+- Os metódos obsoletos da classe `ALFBTWriter`
+```c#
+public abstract void WriterMarkingFlag(string, string);
+public abstract void WriterTextFlag(string, string);
+```
+foram removidos.
+- Os metódos obsoletos da classe `ALFBTRead`
+```c#
+public abstract HeaderFlag GetHeaderFlag();
+public abstract MarkingFlag GetMarkingFlag(string);
+public abstract TextFlag GetTextFlag(string);
+public abstract MarkingFlag[] GetAllMarkingFlags();
+public abstract TextFlag[] GetAllTextFlags();
+public abstract bool TextFlagExists(string);
+public abstract bool MarkingFlagExists(string);
+public abstract bool HeaderFlagExists(string);
+```
+foram removidos.
+### Changed
+- O metódo `bool ALFBTRead.FlagExists(string, AlfbtFlags);` deixou de ser obsoleto.
+### Added
+- O metódo `IItemReadOnly ALFBTMemoryStreamRead.GetFlag(string, AlfbtFlags);` foi adicionado.
+## [2.0.0-ch1] - 28/08/2023
+### Changed
+- O autor do pacote foi alterado de `Cobilas CTB` para `BélicusBr`.
 ## [1.0.3] - 30/01/2023
 ### Added
 - Formato '1.5' ALFBT
