@@ -18,24 +18,7 @@ namespace Cobilas.IO.Alf.Alfbt {
         public abstract IItemReadOnly this[int index] { get; }
         object IReadOnlyArray.this[int index] => (this as IReadOnlyArray<IItemReadOnly>)[index];
 
-        [Obsolete("Use IItemReadOnly:GetFlag(string)")]
-        public abstract HeaderFlag GetHeaderFlag();
-        [Obsolete("Use IItemReadOnly:GetFlag(string)")]
-        public abstract MarkingFlag GetMarkingFlag(string name);
-        [Obsolete("Use IItemReadOnly:GetFlag(string)")]
-        public abstract TextFlag GetTextFlag(string name);
-        [Obsolete("Use IItemReadOnly:GetFlag(string)")]
-        public abstract MarkingFlag[] GetAllMarkingFlags();
-        [Obsolete("Use IItemReadOnly:GetFlag(string)")]
-        public abstract TextFlag[] GetAllTextFlags();
         public abstract CommentFlag GetCommentFlag();
-        [Obsolete("Use bool:FlagExists(string)")]
-        public abstract bool TextFlagExists(string name);
-        [Obsolete("Use bool:FlagExists(string)")]
-        public abstract bool MarkingFlagExists(string name);
-        [Obsolete("Use bool:FlagExists(string)")]
-        public abstract bool HeaderFlagExists(string name);
-        [Obsolete("Use bool:FlagExists(string)")]
         public abstract bool FlagExists(string name, AlfbtFlags flags);
         public abstract bool FlagExists(string name);
         public abstract IItemReadOnly GetFlag(string name);

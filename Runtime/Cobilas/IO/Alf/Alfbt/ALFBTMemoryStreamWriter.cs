@@ -85,12 +85,6 @@ namespace Cobilas.IO.Alf.Alfbt {
             WriteElement(ALFBTUtility.n_Encoding, memory.Encoding.BodyName);
         }
 
-        public override void WriterMarkingFlag(string name, string value)
-            => WriteElement(name, value);
-
-        public override void WriterTextFlag(string name, string value)
-            => WriteElement(name, value);
-
         protected override string AddEscapeOnSpecialCharactersInText(string value) {
             using (CharacterCursor cursor = new CharacterCursor(value.ToCharArray()))
                 while (cursor.MoveToCharacter()) {
