@@ -1,4 +1,6 @@
 # Changelog
+## [3.0.0] - 02/09/2023
+- ⛔ DEPRECATED O pacote com.cobilas.core foi incorporado no pacote com.cobilas.unity.utility.
 ## [3.0.0] - 29/08/2023
 ### Removed
 - Os metódos obsoletos da classe `ALFBTWriter`
